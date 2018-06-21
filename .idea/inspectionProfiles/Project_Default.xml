@@ -1,0 +1,11 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="AndroidLintProtectedPermissions" enabled="true" level="INFO" enabled_by_default="true" />
+    <inspection_tool class="GroovyStaticVariableNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_regex" value="s_[a-z][A-Za-z\d]*" />
+      <option name="m_minLength" value="4" />
+      <option name="m_maxLength" value="32" />
+    </inspection_tool>
+  </profile>
+</component>
