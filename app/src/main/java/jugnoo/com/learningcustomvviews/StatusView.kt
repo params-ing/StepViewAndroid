@@ -13,11 +13,12 @@ public class StatusView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         ) : View(context, attrs, defStyleAttr) {
 
-
-    /**
-     * width fix and height wrap content
-     */
-
+/*
+    todo   1. Account for padding and
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+ */
 
 
 
@@ -28,7 +29,7 @@ public class StatusView @JvmOverloads constructor(
 
 
     private var statusData = mutableListOf<Item>()
-    private val statusCount:Int = 3;
+    private val statusCount:Int = 10;
     private val circleRadius:Float = 50.0f
     private val lineLength:Float = 50.0f
     private val lastPoint = PointF();
@@ -84,8 +85,21 @@ public class StatusView @JvmOverloads constructor(
        val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
 
-        val measuredWidth = resolveSize(desiredWidth,widthMeasureSpec)
-        val measuredHeight = resolveSize(desiredHeight,heightMeasureSpec)
+        var measuredWidth = resolveSize(desiredWidth,widthMeasureSpec)
+        var measuredHeight = resolveSize(desiredHeight,heightMeasureSpec)
+
+        val heightMode =   MeasureSpec.getMode(heightMeasureSpec);
+        val widthMode =   MeasureSpec.getMode(widthMeasureSpec);
+        if(measuredWidth<desiredWidth && heightMode==MeasureSpec.AT_MOST){
+            val actualWidth = measuredWidth-(paddingLeft+paddingRight)
+            val maxHorizontalRadius = ((actualWidth)/(((statusCount-1)*lineRatio)+(2*statusCount))) ;
+            measuredHeight = (maxHorizontalRadius*2.0f).toInt();
+        }else if(measuredHeight<desiredHeight && widthMode==MeasureSpec.AT_MOST){
+            val verticalRadius = measuredHeight/2.0f;
+            val lineLength = lineRatio * verticalRadius;
+            measuredWidth = ((statusCount * (2 * (verticalRadius))) + ((statusCount - 1) * lineLength)).toInt()
+
+        }
 
         setMeasuredDimension(measuredWidth,measuredHeight)
 
