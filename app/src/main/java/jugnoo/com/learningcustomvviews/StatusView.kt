@@ -14,10 +14,8 @@ public class StatusView @JvmOverloads constructor(
         ) : View(context, attrs, defStyleAttr) {
 
 /*
-    todo   1. Account for padding and
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
+    todo   1. Account for TextSize Ratio
+
  */
 
 
@@ -29,7 +27,7 @@ public class StatusView @JvmOverloads constructor(
 
 
     private var statusData = mutableListOf<Item>()
-    private val statusCount:Int = 10;
+    private val statusCount:Int = 20;
     private val circleRadius:Float = 50.0f
     private val lineLength:Float = 50.0f
     private val lastPoint = PointF();
@@ -63,11 +61,6 @@ public class StatusView @JvmOverloads constructor(
         textPaint.textSize = 20.0f
         lineRatio = lineLength/circleRadius
 
-
-
-
-
-
     }
 
 
@@ -84,20 +77,12 @@ public class StatusView @JvmOverloads constructor(
        val desiredWidth =paddingLeft + paddingRight + suggestedMinimumWidth
        val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
-
-        var measuredWidth = resolveSize(desiredWidth,widthMeasureSpec)
+        val measuredWidth = resolveSize(desiredWidth,widthMeasureSpec)
         var measuredHeight = resolveSize(desiredHeight,heightMeasureSpec)
-
         val heightMode =   MeasureSpec.getMode(heightMeasureSpec);
-        val widthMode =   MeasureSpec.getMode(widthMeasureSpec);
-        if(measuredWidth<desiredWidth && heightMode==MeasureSpec.AT_MOST){
-            val actualWidth = measuredWidth-(paddingLeft+paddingRight)
-            val maxHorizontalRadius = ((actualWidth)/(((statusCount-1)*lineRatio)+(2*statusCount))) ;
-            measuredHeight = (maxHorizontalRadius*2.0f).toInt();
-        }else if(measuredHeight<desiredHeight && widthMode==MeasureSpec.AT_MOST){
-            val verticalRadius = measuredHeight/2.0f;
-            val lineLength = lineRatio * verticalRadius;
-            measuredWidth = ((statusCount * (2 * (verticalRadius))) + ((statusCount - 1) * lineLength)).toInt()
+        if(heightMode == MeasureSpec.AT_MOST){
+            val maxHorizontalRadius = ((measuredWidth)/(((statusCount-1)*lineRatio)+(2*statusCount))) ;
+            measuredHeight = (maxHorizontalRadius * 2.0f).toInt() + paddingTop + paddingBottom;
 
         }
 
