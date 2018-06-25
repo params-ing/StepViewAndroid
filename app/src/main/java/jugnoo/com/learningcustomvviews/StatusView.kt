@@ -5,6 +5,9 @@ import android.graphics.*
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.view.View
+import android.content.res.TypedArray
+import kotlin.properties.Delegates
+
 
 /**
  * Created by Parminder Saini on 12/06/18.
@@ -14,7 +17,13 @@ public class StatusView @JvmOverloads constructor(
         ) : View(context, attrs, defStyleAttr) {
 
 /*
-    todo   1. Account for TextSize Ratio
+    todo
+            Case left height 20dp and width wrap_content
+           1. Account for TextSize Ratio 2. Add labels 3.dp to px things
+           3. Pass font to textView
+           4.Complete color /Incompletecolor
+           5.Labels
+           2. Orientation draw vertical too
 
  */
 
@@ -23,15 +32,23 @@ public class StatusView @JvmOverloads constructor(
     private lateinit var circlePaint:Paint
     private lateinit var textPaint:Paint
     private lateinit var linePaint:Paint
-    private var mStrokeWidth:Float = 2.0f;
 
 
-    private var statusData = mutableListOf<Item>()
-    private val statusCount:Int = 20;
-    private val circleRadius:Float = 50.0f
-    private val lineLength:Float = 50.0f
+    private var statusCount:Int = 4;
+    private var circleRadius:Float = 50.0f
+    private var lineLength:Float = 50.0f
+    private var mStrokeWidth:Float = 2.0f
+    private var lineColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
+    private var circleFillColor:Int = ContextCompat.getColor(context,android.R.color.transparent)
+    private var circleStrokeColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
+    private var textColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
+    private var textSize:Float = 20.0f
+
+
     private val lastPoint = PointF();
     private var lineRatio = 0.0f;
+    private var statusData = mutableListOf<Item>()
+
 
     //To store the data of each circle
     private data class Item(val textData:StatusItemText, val circleItem: CircleItem, val lineItem: LineItem?)
@@ -42,6 +59,24 @@ public class StatusView @JvmOverloads constructor(
 
 
     init {
+        val a = context.theme.obtainStyledAttributes(
+                    attrs,
+                    R.styleable.StatusView,
+                    0, 0)
+
+            try {
+                statusCount = a.getInt(R.styleable.StatusView_statusCount,statusCount);
+                circleRadius = a.getDimension(R.styleable.StatusView_circleRadius,circleRadius)
+                lineLength = a.getDimension(R.styleable.StatusView_lineLength,lineLength)
+                lineColor = a.getColor(R.styleable.StatusView_lineColor,lineColor)
+                circleFillColor = a.getColor(R.styleable.StatusView_circleColor,circleFillColor)
+                circleStrokeColor = a.getColor(R.styleable.StatusView_circleStrokeColor,circleStrokeColor)
+                textColor = a.getColor(R.styleable.StatusView_textColor,textColor)
+                textSize = a.getDimension(R.styleable.StatusView_textSize,textSize)
+            } finally {
+                a.recycle();
+            }
+
         init()
     }
 
@@ -50,15 +85,22 @@ public class StatusView @JvmOverloads constructor(
         circlePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         circlePaint.style = Paint.Style.STROKE
         circlePaint.strokeWidth = mStrokeWidth
-        circlePaint.color = ContextCompat.getColor(context,R.color.colorAccent)
-        linePaint = circlePaint;
+        circlePaint.color = circleFillColor
+
+
+        linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        linePaint.style = Paint.Style.STROKE
+        linePaint.strokeWidth = mStrokeWidth
+        linePaint.color = circleFillColor
+        linePaint.color = lineColor
+
 
         textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         textPaint.style = Paint.Style.FILL
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.strokeWidth = mStrokeWidth
-        textPaint.color = ContextCompat.getColor(context,R.color.colorAccent)
-        textPaint.textSize = 20.0f
+        textPaint.color = textColor
+        textPaint.textSize = textSize
         lineRatio = lineLength/circleRadius
 
     }

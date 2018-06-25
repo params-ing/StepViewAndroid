@@ -2,4 +2,16 @@
 <resources>
 
 
+    <declare-styleable name="StatusView">
+        <attr name="circleRadius" format="dimension" />
+        <attr name="statusCount" format="integer" />
+        <attr name="lineLength" format="dimension" />
+        <attr name="circleColor" format="color"/>
+        <attr name="circleStrokeColor" format="color"/>
+        <attr name="lineColor" format="color"/>
+        <attr name="textColor" format="color"/>
+        <attr name="textSize" format="dimension"/>
+    </declare-styleable>
+
+
 </resources>
