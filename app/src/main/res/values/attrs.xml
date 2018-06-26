@@ -24,6 +24,9 @@
         <attr name="circleStrokeColorIncomplete" format="color"/>
         <attr name="lineColorIncomplete" format="color"/>
         <attr name="textColorIncomplete" format="color"/>
+        <attr name="complete_drawable" format="reference"/>
+        <attr name="inccomplete_drawable" format="reference"/>
+        <attr name="drawCount" format="boolean"/>
     </declare-styleable>
 
 

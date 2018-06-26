@@ -2,6 +2,7 @@ package jugnoo.com.learningcustomvviews
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.view.View
@@ -17,7 +18,7 @@ public class StatusView @JvmOverloads constructor(
 /*
     todo
             Case left height 20dp and width wrap_content
-           1. Account for TextSize Ratio 2. Add labels 3.dp to px things
+           1. Account for TextSize and drawble Ratio 2. Add labels 3.dp to px things
            3. Pass font to textView
            4.Complete color /Incompletecolor
            5.Labels
@@ -44,9 +45,11 @@ public class StatusView @JvmOverloads constructor(
 
     //To store the data of each circle
     private data class Item(val textData:StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?)
-    private data class StatusItemText(val text: String, val paint: Paint, val x:Float, val y:Float)
+    private data class StatusItemText(val text: String?=null, val paint: Paint?=null, val x:Float=0.0f, val y:Float=0.0f,val drawableItem: DrawableItem?=null)
     private data class CircleItem(val center: PointF,val radius:Float,val strokePaint: Paint?,val fillPaint: Paint?)
     private data class LineItem(val start: PointF,val end: PointF,val paint: Paint)
+    private data class DrawableItem(val rect: Rect,val drawable: Drawable)
+
     private val CIRCLE_COLOR_TYPE_FILL = 1;
     private val CIRCLE_COLOR_TYPE_STROKE = 2;
     private val NO_POSITION = -1;
@@ -69,6 +72,9 @@ public class StatusView @JvmOverloads constructor(
     private var textSize:Float = 20.0f
     private var mDrawCountText:Boolean=true
     private var circleColorType = CIRCLE_COLOR_TYPE_FILL
+    private var completeDrawable:Drawable? = null
+    private var inCompleteDrawable:Drawable? = null
+
 
 
     private val lastPoint = PointF();
@@ -108,6 +114,10 @@ public class StatusView @JvmOverloads constructor(
                 lineColorIncomplete = a.getColor(R.styleable.StatusView_lineColorIncomplete,lineColor)
                 circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorInComplete,circleFillColor)
                 circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete,circleStrokeColor)
+
+                completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
+                inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inccomplete_drawable)
+                mDrawCountText = a.getBoolean(R.styleable.StatusView_drawCount,mDrawCountText)
 
                 if(statusCount<0)statusCount = 4
                 if(completeCount<NO_POSITION)completeCount = NO_POSITION
@@ -216,7 +226,17 @@ public class StatusView @JvmOverloads constructor(
 
             }
             if(item.textData!=null){
-                canvas?.drawText(item.textData.text,item.textData.x,item.textData.y,item.textData.paint)
+
+                if(item.textData.drawableItem!=null){
+                    val drawableItem :DrawableItem=  item.textData.drawableItem;
+                    drawableItem.drawable.setBounds(drawableItem.rect)
+                    item.textData.drawableItem.drawable.draw(canvas)
+
+                } else if(item.textData.text!=null && item.textData.paint!=null){
+
+                    canvas?.drawText(item.textData.text,item.textData.x,item.textData.y,item.textData.paint)
+
+                }
 
             }
             if(item.lineItem!=null){
@@ -253,13 +273,13 @@ public class StatusView @JvmOverloads constructor(
             var circleFillPaint =  this.circleFillPaint
             var textPaint =  this.textPaint
             var linePaint =  this.linePaint
-
+            var itemDrawable:Drawable? = completeDrawable
             if(completeCount>-1 && i>=completeCount){
                 circleStrokePaint = circleStrokePaintIncomplete
                 circleFillPaint = circleFillPaintIncomplete
                 textPaint = textPaintIncomplete
                 linePaint = linePaintIncomplete
-
+                itemDrawable = inCompleteDrawable
 
             }
 
@@ -276,11 +296,22 @@ public class StatusView @JvmOverloads constructor(
             val circleItem  = CircleItem(PointF((lastPoint.x+circleRadius),lastPoint.y),circleRadius,circleStrokePaint,circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f)+ (mStrokeWidth/2)
 
-            if(mDrawCountText){
+
+
+            if(itemDrawable!=null){
+                val width = itemDrawable.intrinsicWidth
+                val height = itemDrawable.intrinsicHeight
+                val xPos = circleItem.center.x.toInt()
+                val yPos = circleItem.center.y.toInt()
+                val drawableRect = Rect(xPos-width/2,yPos-height/2,xPos+width/2,yPos+height/2)
+                statusItemText = StatusItemText(drawableItem =  DrawableItem(drawableRect,itemDrawable))
+
+            }else if(mDrawCountText){
                 val text:String = (i+1).toString();
                 val measuringRect = Rect();
                 textPaint.getTextBounds(text,0,text.length,measuringRect)
                 statusItemText = StatusItemText(text,textPaint,circleItem.center.x,circleItem.center.y-measuringRect.exactCenterY())
+
             }
 
 
