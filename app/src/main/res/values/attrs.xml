@@ -11,6 +11,15 @@
         <attr name="lineColor" format="color"/>
         <attr name="textColor" format="color"/>
         <attr name="textSize" format="dimension"/>
+        <attr name="circleStrokeWidth" format="dimension"/>
+        <attr name="lineWidth" format="dimension"/>
+
+        <attr name="circleColorType">
+        <flag name="none" value="0" />
+        <flag name="fill" value="1" />
+        <flag name="stroke" value="2" />
+        <flag name="fillStroke" value="3" />
+        </attr>
     </declare-styleable>
 
 

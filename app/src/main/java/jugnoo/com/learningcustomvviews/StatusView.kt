@@ -5,8 +5,6 @@ import android.graphics.*
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
 import android.view.View
-import android.content.res.TypedArray
-import kotlin.properties.Delegates
 
 
 /**
@@ -23,26 +21,41 @@ public class StatusView @JvmOverloads constructor(
            3. Pass font to textView
            4.Complete color /Incompletecolor
            5.Labels
+           6.Line gaps
+           6. Add drawable instead of text
            2. Orientation draw vertical too
 
  */
 
 
 
-    private lateinit var circlePaint:Paint
+    private  var circleStrokePaint:Paint?=null
+    private  var circleFillPaint:Paint?=null
     private lateinit var textPaint:Paint
     private lateinit var linePaint:Paint
+
+
+    //To store the data of each circle
+    private data class Item(val textData:StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?)
+    private data class StatusItemText(val text: String, val paint: Paint, val x:Float, val y:Float)
+    private data class CircleItem(val center: PointF,val radius:Float,val strokePaint: Paint?,val fillPaint: Paint?)
+    private data class LineItem(val start: PointF,val end: PointF,val paint: Paint)
+    private val CIRCLE_COLOR_TYPE_FILL = 1;
+    private val CIRCLE_COLOR_TYPE_STROKE = 2;
 
 
     private var statusCount:Int = 4;
     private var circleRadius:Float = 50.0f
     private var lineLength:Float = 50.0f
     private var mStrokeWidth:Float = 2.0f
+    private var mLineWidth:Float = 2.0f
     private var lineColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
     private var circleFillColor:Int = ContextCompat.getColor(context,android.R.color.transparent)
     private var circleStrokeColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
     private var textColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
     private var textSize:Float = 20.0f
+    private var mDrawCountText:Boolean=true
+    private var circleColorType = CIRCLE_COLOR_TYPE_FILL
 
 
     private val lastPoint = PointF();
@@ -50,11 +63,7 @@ public class StatusView @JvmOverloads constructor(
     private var statusData = mutableListOf<Item>()
 
 
-    //To store the data of each circle
-    private data class Item(val textData:StatusItemText, val circleItem: CircleItem, val lineItem: LineItem?)
-    private data class StatusItemText(val text: String, val paint: Paint, val x:Float, val y:Float)
-    private data class CircleItem(val center: PointF,val radius:Float,val paint: Paint)
-    private data class LineItem(val start: PointF,val end: PointF,val paint: Paint)
+
 
 
 
@@ -73,6 +82,9 @@ public class StatusView @JvmOverloads constructor(
                 circleStrokeColor = a.getColor(R.styleable.StatusView_circleStrokeColor,circleStrokeColor)
                 textColor = a.getColor(R.styleable.StatusView_textColor,textColor)
                 textSize = a.getDimension(R.styleable.StatusView_textSize,textSize)
+                mStrokeWidth = a.getDimension(R.styleable.StatusView_circleStrokeWidth,mStrokeWidth)
+                mLineWidth = a.getDimension(R.styleable.StatusView_lineWidth,mLineWidth)
+                circleColorType = a.getInteger(R.styleable.StatusView_circleColorType,circleColorType)
             } finally {
                 a.recycle();
             }
@@ -82,16 +94,27 @@ public class StatusView @JvmOverloads constructor(
 
 
     private fun init() {
-        circlePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        circlePaint.style = Paint.Style.STROKE
-        circlePaint.strokeWidth = mStrokeWidth
-        circlePaint.color = circleFillColor
+
+         if(containsFlag(circleColorType,CIRCLE_COLOR_TYPE_STROKE)){
+            circleStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            circleStrokePaint?.style = Paint.Style.STROKE
+            circleStrokePaint?.strokeWidth = mStrokeWidth
+            circleStrokePaint?.color = circleStrokeColor
+        }else{
+             mStrokeWidth=0.0f
+         }
+
+        if(containsFlag(circleColorType,CIRCLE_COLOR_TYPE_FILL)){
+            circleFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            circleFillPaint?.style = Paint.Style.FILL
+            circleFillPaint?.color = circleFillColor
+        }
+
 
 
         linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         linePaint.style = Paint.Style.STROKE
-        linePaint.strokeWidth = mStrokeWidth
-        linePaint.color = circleFillColor
+        linePaint.strokeWidth = mLineWidth
         linePaint.color = lineColor
 
 
@@ -137,8 +160,18 @@ public class StatusView @JvmOverloads constructor(
         super.onDraw(canvas)
         for(item in statusData){
 
-            canvas?.drawCircle(item.circleItem.center.x,item.circleItem.center.y,item.circleItem.radius,item.circleItem.paint)
-            canvas?.drawText(item.textData.text,item.textData.x,item.textData.y,item.textData.paint)
+            if(item.circleItem.fillPaint!=null){
+                canvas?.drawCircle(item.circleItem.center.x,item.circleItem.center.y,item.circleItem.radius,item.circleItem.fillPaint)
+
+            }
+            if(item.circleItem.strokePaint!=null){
+                canvas?.drawCircle(item.circleItem.center.x,item.circleItem.center.y,item.circleItem.radius,item.circleItem.strokePaint)
+
+            }
+            if(item.textData!=null){
+                canvas?.drawText(item.textData.text,item.textData.x,item.textData.y,item.textData.paint)
+
+            }
             if(item.lineItem!=null){
                 canvas?.drawLine(item.lineItem.start.x,item.lineItem.start.y,
                         item.lineItem.end.x,item.lineItem.end.y,item.lineItem.paint);
@@ -169,13 +202,17 @@ public class StatusView @JvmOverloads constructor(
         lastPoint.y = paddingTop.toFloat() + (circleRadius+ (mStrokeWidth/2))
         for (i in 0 until statusCount){
             var lineItem:StatusView.LineItem? = null
-            val circleItem  = CircleItem(PointF((lastPoint.x+circleRadius),lastPoint.y),circleRadius,circlePaint)
+            var statusItemText:StatusView.StatusItemText? = null
+
+            val circleItem  = CircleItem(PointF((lastPoint.x+circleRadius),lastPoint.y),circleRadius,circleStrokePaint,circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f)+ (mStrokeWidth/2)
 
-            val text:String = (i+1).toString();
-            val measuringRect = Rect();
-            textPaint.getTextBounds(text,0,text.length,measuringRect)
-            val statusItemText = StatusItemText(text,textPaint,circleItem.center.x,circleItem.center.y-measuringRect.exactCenterY())
+            if(mDrawCountText){
+                val text:String = (i+1).toString();
+                val measuringRect = Rect();
+                textPaint.getTextBounds(text,0,text.length,measuringRect)
+                statusItemText = StatusItemText(text,textPaint,circleItem.center.x,circleItem.center.y-measuringRect.exactCenterY())
+            }
 
             if (i!=statusCount-1) {
                 lineItem = LineItem(PointF(lastPoint.x,lastPoint.y), PointF(lastPoint.x+lineLength,lastPoint.y), linePaint)
@@ -188,5 +225,13 @@ public class StatusView @JvmOverloads constructor(
         }
 
 
+    }
+
+    private fun containsFlag(flagSet: Int, flag: Int): Boolean {
+        return flagSet or flag == flagSet
+    }
+
+    private fun addFlag(flagSet: Int, flag: Int): Int {
+        return flagSet or flag
     }
 }
