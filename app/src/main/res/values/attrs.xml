@@ -5,6 +5,7 @@
     <declare-styleable name="StatusView">
         <attr name="circleRadius" format="dimension" />
         <attr name="statusCount" format="integer" />
+        <attr name="completeCount" format="integer" />
         <attr name="lineLength" format="dimension" />
         <attr name="circleColor" format="color"/>
         <attr name="circleStrokeColor" format="color"/>
@@ -13,13 +14,16 @@
         <attr name="textSize" format="dimension"/>
         <attr name="circleStrokeWidth" format="dimension"/>
         <attr name="lineWidth" format="dimension"/>
-
         <attr name="circleColorType">
         <flag name="none" value="0" />
         <flag name="fill" value="1" />
         <flag name="stroke" value="2" />
         <flag name="fillStroke" value="3" />
         </attr>
+        <attr name="circleColorInComplete" format="color"/>
+        <attr name="circleStrokeColorIncomplete" format="color"/>
+        <attr name="lineColorIncomplete" format="color"/>
+        <attr name="textColorIncomplete" format="color"/>
     </declare-styleable>
 
 

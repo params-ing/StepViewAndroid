@@ -35,6 +35,13 @@ public class StatusView @JvmOverloads constructor(
     private lateinit var linePaint:Paint
 
 
+    private  var circleStrokePaintIncomplete:Paint?=null
+    private  var circleFillPaintIncomplete:Paint?=null
+    private lateinit var textPaintIncomplete:Paint
+    private lateinit var linePaintIncomplete:Paint
+
+
+
     //To store the data of each circle
     private data class Item(val textData:StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?)
     private data class StatusItemText(val text: String, val paint: Paint, val x:Float, val y:Float)
@@ -42,9 +49,11 @@ public class StatusView @JvmOverloads constructor(
     private data class LineItem(val start: PointF,val end: PointF,val paint: Paint)
     private val CIRCLE_COLOR_TYPE_FILL = 1;
     private val CIRCLE_COLOR_TYPE_STROKE = 2;
+    private val NO_POSITION = -1;
 
 
     private var statusCount:Int = 4;
+    private var completeCount:Int= NO_POSITION;
     private var circleRadius:Float = 50.0f
     private var lineLength:Float = 50.0f
     private var mStrokeWidth:Float = 2.0f
@@ -53,6 +62,10 @@ public class StatusView @JvmOverloads constructor(
     private var circleFillColor:Int = ContextCompat.getColor(context,android.R.color.transparent)
     private var circleStrokeColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
     private var textColor:Int = ContextCompat.getColor(context,R.color.colorAccent)
+    private var lineColorIncomplete:Int
+    private var circleFillColorIncomplete:Int
+    private var circleStrokeColorIncomplete:Int
+    private var textColorIncomplete:Int
     private var textSize:Float = 20.0f
     private var mDrawCountText:Boolean=true
     private var circleColorType = CIRCLE_COLOR_TYPE_FILL
@@ -74,17 +87,32 @@ public class StatusView @JvmOverloads constructor(
                     0, 0)
 
             try {
+
                 statusCount = a.getInt(R.styleable.StatusView_statusCount,statusCount);
+                completeCount = a.getInt(R.styleable.StatusView_completeCount,NO_POSITION);
+
                 circleRadius = a.getDimension(R.styleable.StatusView_circleRadius,circleRadius)
                 lineLength = a.getDimension(R.styleable.StatusView_lineLength,lineLength)
                 lineColor = a.getColor(R.styleable.StatusView_lineColor,lineColor)
                 circleFillColor = a.getColor(R.styleable.StatusView_circleColor,circleFillColor)
                 circleStrokeColor = a.getColor(R.styleable.StatusView_circleStrokeColor,circleStrokeColor)
+
                 textColor = a.getColor(R.styleable.StatusView_textColor,textColor)
                 textSize = a.getDimension(R.styleable.StatusView_textSize,textSize)
                 mStrokeWidth = a.getDimension(R.styleable.StatusView_circleStrokeWidth,mStrokeWidth)
                 mLineWidth = a.getDimension(R.styleable.StatusView_lineWidth,mLineWidth)
                 circleColorType = a.getInteger(R.styleable.StatusView_circleColorType,circleColorType)
+
+
+                textColorIncomplete = a.getColor(R.styleable.StatusView_textColorIncomplete,textColor)
+                lineColorIncomplete = a.getColor(R.styleable.StatusView_lineColorIncomplete,lineColor)
+                circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorInComplete,circleFillColor)
+                circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete,circleStrokeColor)
+
+                if(statusCount<0)statusCount = 4
+                if(completeCount<NO_POSITION)completeCount = NO_POSITION
+
+
             } finally {
                 a.recycle();
             }
@@ -100,6 +128,12 @@ public class StatusView @JvmOverloads constructor(
             circleStrokePaint?.style = Paint.Style.STROKE
             circleStrokePaint?.strokeWidth = mStrokeWidth
             circleStrokePaint?.color = circleStrokeColor
+
+             if(completeCount!=-1 && completeCount<statusCount){
+                 circleStrokePaintIncomplete = Paint(circleStrokePaint);
+                 circleStrokePaintIncomplete?.color = circleStrokeColorIncomplete
+             }
+
         }else{
              mStrokeWidth=0.0f
          }
@@ -108,8 +142,12 @@ public class StatusView @JvmOverloads constructor(
             circleFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             circleFillPaint?.style = Paint.Style.FILL
             circleFillPaint?.color = circleFillColor
-        }
 
+            if(completeCount!=-1 && completeCount<statusCount){
+                circleFillPaintIncomplete = Paint(circleFillPaint);
+                circleFillPaintIncomplete?.color = circleFillColorIncomplete
+            }
+        }
 
 
         linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -125,6 +163,15 @@ public class StatusView @JvmOverloads constructor(
         textPaint.color = textColor
         textPaint.textSize = textSize
         lineRatio = lineLength/circleRadius
+
+
+        if(completeCount!=-1 && completeCount<statusCount){
+            linePaintIncomplete = Paint(linePaint);
+            linePaintIncomplete.color = lineColorIncomplete
+
+            textPaintIncomplete = Paint(textPaint)
+            textPaintIncomplete.color = textColorIncomplete
+        }
 
     }
 
@@ -201,8 +248,30 @@ public class StatusView @JvmOverloads constructor(
         lastPoint.x = paddingLeft.toFloat()+ (mStrokeWidth/2)
         lastPoint.y = paddingTop.toFloat() + (circleRadius+ (mStrokeWidth/2))
         for (i in 0 until statusCount){
+
+            var circleStrokePaint =  this.circleStrokePaint
+            var circleFillPaint =  this.circleFillPaint
+            var textPaint =  this.textPaint
+            var linePaint =  this.linePaint
+
+            if(completeCount>-1 && i>=completeCount){
+                circleStrokePaint = circleStrokePaintIncomplete
+                circleFillPaint = circleFillPaintIncomplete
+                textPaint = textPaintIncomplete
+                linePaint = linePaintIncomplete
+
+
+            }
+
+
             var lineItem:StatusView.LineItem? = null
             var statusItemText:StatusView.StatusItemText? = null
+
+            if (i!=0) {
+                lineItem = LineItem(PointF(lastPoint.x,lastPoint.y), PointF(lastPoint.x+lineLength,lastPoint.y), linePaint)
+                lastPoint.x = lineItem.end.x + (mStrokeWidth/2)
+            }
+
 
             val circleItem  = CircleItem(PointF((lastPoint.x+circleRadius),lastPoint.y),circleRadius,circleStrokePaint,circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f)+ (mStrokeWidth/2)
@@ -214,10 +283,7 @@ public class StatusView @JvmOverloads constructor(
                 statusItemText = StatusItemText(text,textPaint,circleItem.center.x,circleItem.center.y-measuringRect.exactCenterY())
             }
 
-            if (i!=statusCount-1) {
-                lineItem = LineItem(PointF(lastPoint.x,lastPoint.y), PointF(lastPoint.x+lineLength,lastPoint.y), linePaint)
-                lastPoint.x = lineItem.end.x + (mStrokeWidth/2)
-            }
+
 
             statusData.add(Item(statusItemText,circleItem,lineItem))
 
