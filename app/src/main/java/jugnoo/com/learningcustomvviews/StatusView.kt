@@ -18,6 +18,7 @@ public class StatusView @JvmOverloads constructor(
 /*
     todo
             Case left height 20dp and width wrap_content
+            add Gravity params i.e if width is wrap content and height is 20dp if gravity is center draw from center, left right etc
            1. Account for TextSize and drawble Ratio 2. Add labels 3.dp to px things
            3. Pass font to textView
            4.Complete color /Incompletecolor
@@ -25,6 +26,7 @@ public class StatusView @JvmOverloads constructor(
            6.Line gaps
            6. Add drawable instead of text
            2. Orientation draw vertical too
+           PUSH TO ORIGIN
 
  */
 
@@ -199,13 +201,19 @@ public class StatusView @JvmOverloads constructor(
        val desiredWidth =paddingLeft + paddingRight + suggestedMinimumWidth
        val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
-        val measuredWidth = resolveSize(desiredWidth,widthMeasureSpec)
+        var measuredWidth = resolveSize(desiredWidth,widthMeasureSpec)
         var measuredHeight = resolveSize(desiredHeight,heightMeasureSpec)
         val heightMode =   MeasureSpec.getMode(heightMeasureSpec);
+        val widthMode =   MeasureSpec.getMode(widthMeasureSpec);
+
+        val maxHorizontalRadius = ((measuredWidth)/(((statusCount-1)*lineRatio)+(2*statusCount))) ;
+        val maxVerticalRadius = measuredHeight/2.0f ;
         if(heightMode == MeasureSpec.AT_MOST){
-            val maxHorizontalRadius = ((measuredWidth)/(((statusCount-1)*lineRatio)+(2*statusCount))) ;
             measuredHeight = (maxHorizontalRadius * 2.0f).toInt() + paddingTop + paddingBottom;
 
+        }
+        if(widthMode==MeasureSpec.AT_MOST && maxVerticalRadius<maxHorizontalRadius){
+            measuredWidth = ((((statusCount-1)*lineRatio)+(2*statusCount))*maxVerticalRadius).toInt() + paddingLeft + paddingRight;
         }
 
         setMeasuredDimension(measuredWidth,measuredHeight)
