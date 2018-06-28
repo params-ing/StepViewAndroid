@@ -27,6 +27,7 @@
         <attr name="complete_drawable" format="reference"/>
         <attr name="inccomplete_drawable" format="reference"/>
         <attr name="drawCount" format="boolean"/>
+        <attr name="lineGap" format="dimension"/>
     </declare-styleable>
 
 

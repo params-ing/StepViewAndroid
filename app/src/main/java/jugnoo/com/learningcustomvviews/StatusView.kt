@@ -21,7 +21,8 @@ class StatusView @JvmOverloads constructor(
     /*
         todo
                 add Gravity params i.e if width is wrap content and height is 20dp if gravity is center draw from center, left right etc
-               1. Account for TextSize and drawable Ratio 2. Add labels 3.dp to px things
+               1.Account for stroke ratio
+               1. Account for StokTextSize and drawable Ratio 2. Add labels 3.dp to px things
                3. Pass font to textView
                5.Labels
                6.Line gaps
@@ -76,6 +77,7 @@ class StatusView @JvmOverloads constructor(
     private var circleColorType = CIRCLE_COLOR_TYPE_FILL
     private var completeDrawable: Drawable? = null
     private var inCompleteDrawable: Drawable? = null
+    private var lineGap = 0.0f
 
 
     private val lastPoint = PointF()
@@ -115,6 +117,7 @@ class StatusView @JvmOverloads constructor(
             completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
             inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inccomplete_drawable)
             mDrawCountText = a.getBoolean(R.styleable.StatusView_drawCount, mDrawCountText)
+            lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
 
             if (statusCount < 0) statusCount = 4
             if (completeCount < INVALID_STATUS_COUNT) completeCount = INVALID_STATUS_COUNT
@@ -169,7 +172,7 @@ class StatusView @JvmOverloads constructor(
         textPaint.strokeWidth = mStrokeWidth
         textPaint.color = textColor
         textPaint.textSize = textSize
-        lineRatio = lineLength / circleRadius
+        lineRatio =( lineLength + (lineGap * 2)) / circleRadius
 
 
         if (isShwoingIncompleteStatus()) {
@@ -187,7 +190,7 @@ class StatusView @JvmOverloads constructor(
 
 
     override fun getSuggestedMinimumWidth(): Int {
-        return ((statusCount * (2 * (circleRadius))) + ((statusCount - 1) * lineLength)).toInt()
+        return ((statusCount * (2 * (circleRadius))) + ((statusCount - 1) * ( lineLength + (lineGap * 2)))).toInt()
     }
 
     override fun getSuggestedMinimumHeight(): Int {
@@ -268,7 +271,7 @@ class StatusView @JvmOverloads constructor(
         val maxHorizontalRadius = ((actualWidth) / (((statusCount - 1) * lineRatio) + (2 * statusCount)))
         val maxVerticalRadius = actualHeight.toFloat() / 2
         var circleRadius = Math.min(maxHorizontalRadius, maxVerticalRadius)
-        val lineLength = circleRadius * lineRatio
+        val lineLength = (circleRadius * lineRatio)-(2 * lineGap)
         circleRadius -= (mStrokeWidth / 2)
 
         lastPoint.x = paddingLeft.toFloat() + (mStrokeWidth / 2)
@@ -294,8 +297,9 @@ class StatusView @JvmOverloads constructor(
             var statusItemText: StatusView.StatusItemText? = null
 
             if (i != 0) {
+                lastPoint.x += lineGap;
                 lineItem = LineItem(PointF(lastPoint.x, lastPoint.y), PointF(lastPoint.x + lineLength, lastPoint.y), linePaint)
-                lastPoint.x = lineItem.end.x + (mStrokeWidth / 2)
+                lastPoint.x = lineItem.end.x + lineGap +  (mStrokeWidth / 2)
             }
 
 

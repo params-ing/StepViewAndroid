@@ -15,6 +15,7 @@
         app:lineWidth="5dp"
         app:completeCount="3"
         app:drawCount="false"
+        app:lineGap="3dp"
         app:circleStrokeColorIncomplete="@android:color/black"
         app:circleColorInComplete="@android:color/darker_gray"
         app:lineColorIncomplete="@android:color/darker_gray"
