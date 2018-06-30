@@ -207,8 +207,8 @@ class StatusView @JvmOverloads constructor(
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
 
-        val maxHorizontalRadius = ((measuredWidth) / (((statusCount - 1) * lineRatio) + (2 * statusCount)))
-        val maxVerticalRadius = measuredHeight / 2.0f
+        val maxHorizontalRadius = ((measuredWidth-(paddingLeft+paddingRight)) / (((statusCount - 1) * lineRatio) + (2 * statusCount)))
+        val maxVerticalRadius = (measuredHeight -(paddingTop+paddingBottom)) / 2.0f
         if (heightMode == MeasureSpec.AT_MOST) {
             measuredHeight = (maxHorizontalRadius * 2.0f).toInt() + paddingTop + paddingBottom
 
