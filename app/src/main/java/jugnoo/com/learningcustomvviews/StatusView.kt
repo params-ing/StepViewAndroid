@@ -50,12 +50,12 @@ class StatusView @JvmOverloads constructor(
 
 
     //To store the data of each circle
-    private data class Item(val textData: StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?)
+    private class Item(val textData: StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?)
 
-    private data class StatusItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null)
-    private data class CircleItem(val center: PointF, val radius: Float, val strokePaint: Paint?, val fillPaint: Paint?)
-    private data class LineItem(val start: PointF, val end: PointF, val paint: Paint)
-    private data class DrawableItem(val rect: Rect, val drawable: Drawable)
+    private class StatusItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null)
+    private class CircleItem(val center: PointF, val radius: Float, val strokePaint: Paint?, val fillPaint: Paint?)
+    private class LineItem(val start: PointF, val end: PointF, val paint: Paint)
+    private class DrawableItem(val rect: Rect, val drawable: Drawable)
 
 
     private var statusCount: Int = 4
@@ -81,7 +81,6 @@ class StatusView @JvmOverloads constructor(
 
 
     private val lastPoint = PointF()
-    private var lineRatio = 0.0f
     private var statusData = mutableListOf<Item>()
 
 
@@ -172,7 +171,6 @@ class StatusView @JvmOverloads constructor(
         textPaint.strokeWidth = mStrokeWidth
         textPaint.color = textColor
         textPaint.textSize = textSize
-        lineRatio =( lineLength + (lineGap * 2)) / circleRadius
 
 
         if (isShwoingIncompleteStatus()) {
@@ -190,11 +188,11 @@ class StatusView @JvmOverloads constructor(
 
 
     override fun getSuggestedMinimumWidth(): Int {
-        return ((statusCount * (2 * (circleRadius))) + ((statusCount - 1) * ( lineLength + (lineGap * 2)))).toInt()
+        return ((statusCount * (2 * (circleRadius + (mStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2)))).toInt()
     }
 
     override fun getSuggestedMinimumHeight(): Int {
-        return ((circleRadius) * 2).toInt()
+        return ((circleRadius  * 2)+mStrokeWidth).toInt()
     }
 
 
@@ -202,20 +200,8 @@ class StatusView @JvmOverloads constructor(
         val desiredWidth = paddingLeft + paddingRight + suggestedMinimumWidth
         val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
-        var measuredWidth = resolveSize(desiredWidth, widthMeasureSpec)
-        var measuredHeight = resolveSize(desiredHeight, heightMeasureSpec)
-        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
-        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
-
-        val maxHorizontalRadius = ((measuredWidth-(paddingLeft+paddingRight)) / (((statusCount - 1) * lineRatio) + (2 * statusCount)))
-        val maxVerticalRadius = (measuredHeight -(paddingTop+paddingBottom)) / 2.0f
-        if (heightMode == MeasureSpec.AT_MOST) {
-            measuredHeight = (maxHorizontalRadius * 2.0f).toInt() + paddingTop + paddingBottom
-
-        }
-        if (widthMode == MeasureSpec.AT_MOST && maxVerticalRadius < maxHorizontalRadius) {
-            measuredWidth = ((((statusCount - 1) * lineRatio) + (2 * statusCount)) * maxVerticalRadius).toInt() + paddingLeft + paddingRight
-        }
+        val measuredWidth = resolveSize(desiredWidth, widthMeasureSpec)
+        val measuredHeight = resolveSize(desiredHeight, heightMeasureSpec)
 
         setMeasuredDimension(measuredWidth, measuredHeight)
 
@@ -259,20 +245,11 @@ class StatusView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        setDrawingDimensions(w, h)
+        setDrawingDimensions()
     }
 
 
-    private fun setDrawingDimensions(w: Int, h: Int) {
-        val actualWidth = w - (paddingLeft + paddingRight)
-        val actualHeight = h - (paddingBottom + paddingTop)
-
-
-        val maxHorizontalRadius = ((actualWidth) / (((statusCount - 1) * lineRatio) + (2 * statusCount)))
-        val maxVerticalRadius = actualHeight.toFloat() / 2
-        var circleRadius = Math.min(maxHorizontalRadius, maxVerticalRadius)
-        val lineLength = (circleRadius * lineRatio)-(2 * lineGap)
-        circleRadius -= (mStrokeWidth / 2)
+    private fun setDrawingDimensions() {
 
         lastPoint.x = paddingLeft.toFloat() + (mStrokeWidth / 2)
         lastPoint.y = paddingTop.toFloat() + (circleRadius + (mStrokeWidth / 2))
