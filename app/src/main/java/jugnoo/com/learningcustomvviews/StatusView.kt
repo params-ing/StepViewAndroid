@@ -7,6 +7,9 @@ import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.support.v4.content.ContextCompat
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.View
 
@@ -18,19 +21,21 @@ class StatusView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    /*
-        todo
-                add Gravity params i.e if width is wrap content and height is 20dp if gravity is center draw from center, left right etc
-               1.Account for stroke ratio
-               1. Account for StokTextSize and drawable Ratio 2. Add labels 3.dp to px things
-               3. Pass font to textView
-               5.Labels
-               6.Line gaps
-               6. Add drawable instead of text
-               2. Orientation draw vertical too
-               PUSH TO ORIGIN
+        /*
+         TODO
+       getDimensionPixelSize || Convert Calculations to int
+       set radius programatically etc.g
+       optimisie caluclations repititons
+       Parsing statusItem in anyway
+       Status Labels padding from top
+       LabelsText Paint
+       LTR Support
+       Getter/Setter for radius etc
+       Add labels dp to px things
+       Pass font to textView
+       Orientation draw vertical too
+      */
 
-     */
     companion object {
         const val CIRCLE_COLOR_TYPE_FILL = 1
         const val CIRCLE_COLOR_TYPE_STROKE = 2
@@ -39,23 +44,24 @@ class StatusView @JvmOverloads constructor(
 
     private var circleStrokePaint: Paint? = null
     private var circleFillPaint: Paint? = null
-    private lateinit var textPaint: Paint
+    private lateinit var textPaint: TextPaint
     private lateinit var linePaint: Paint
 
 
     private var circleStrokePaintIncomplete: Paint? = null
     private var circleFillPaintIncomplete: Paint? = null
-    private lateinit var textPaintIncomplete: Paint
+    private lateinit var textPaintIncomplete: TextPaint
     private lateinit var linePaintIncomplete: Paint
 
 
     //To store the data of each circle
-    private class Item(val textData: StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?)
+    private class Item(val textData: StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?,val labelData: StatusItemText?=null)
 
-    private class StatusItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null)
+    private class StatusItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null,val staticLayout: StaticLayout? = null)
     private class CircleItem(val center: PointF, val radius: Float, val strokePaint: Paint?, val fillPaint: Paint?)
     private class LineItem(val start: PointF, val end: PointF, val paint: Paint)
     private class DrawableItem(val rect: Rect, val drawable: Drawable)
+    private data class LabelInfo(val text:String,var width:Float=0.0f,var height:Float=0.0f,var staticLayout: StaticLayout? = null)
 
 
     private var statusCount: Int = 4
@@ -78,10 +84,12 @@ class StatusView @JvmOverloads constructor(
     private var completeDrawable: Drawable? = null
     private var inCompleteDrawable: Drawable? = null
     private var lineGap = 0.0f
+    private var extraWidthIncase = 0.0f
 
 
     private val lastPoint = PointF()
-    private var statusData = mutableListOf<Item>()
+    private var drawingData = mutableListOf<Item>()
+    private var statusData = mutableListOf<LabelInfo>()
 
 
     init {
@@ -95,7 +103,7 @@ class StatusView @JvmOverloads constructor(
             statusCount = a.getInt(R.styleable.StatusView_statusCount, statusCount)
             completeCount = a.getInt(R.styleable.StatusView_completeCount, INVALID_STATUS_COUNT)
 
-            circleRadius = a.getDimension(R.styleable.StatusView_circleRadius, circleRadius)
+            circleRadius = a.getDimensionPixelSize(R.styleable.StatusView_circleRadius, circleRadius)
             lineLength = a.getDimension(R.styleable.StatusView_lineLength, lineLength)
             lineColor = a.getColor(R.styleable.StatusView_lineColor, lineColor)
             circleFillColor = a.getColor(R.styleable.StatusView_circleColor, circleFillColor)
@@ -120,6 +128,20 @@ class StatusView @JvmOverloads constructor(
 
             if (statusCount < 0) statusCount = 4
             if (completeCount < INVALID_STATUS_COUNT) completeCount = INVALID_STATUS_COUNT
+
+            statusData.add(LabelInfo("Dispat\nchDispatchDispatc"))
+            statusData.add(LabelInfo("DeliveredDelivered"))
+            statusData.add(LabelInfo("InProgress"))
+            statusData.add(LabelInfo("OnWayeeeeemmmm"))
+
+            if(statusData.size>statusCount){
+
+                while(statusData.size!=statusCount){
+                    statusData.removeAt(statusData.size-1)
+                }
+            }
+
+
 
 
         } finally {
@@ -165,7 +187,7 @@ class StatusView @JvmOverloads constructor(
         linePaint.color = lineColor
 
 
-        textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         textPaint.style = Paint.Style.FILL
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.strokeWidth = mStrokeWidth
@@ -177,7 +199,7 @@ class StatusView @JvmOverloads constructor(
             linePaintIncomplete = Paint(linePaint)
             linePaintIncomplete.color = lineColorIncomplete
 
-            textPaintIncomplete = Paint(textPaint)
+            textPaintIncomplete = TextPaint(textPaint)
             textPaintIncomplete.color = textColorIncomplete
         }
 
@@ -188,11 +210,52 @@ class StatusView @JvmOverloads constructor(
 
 
     override fun getSuggestedMinimumWidth(): Int {
-        return ((statusCount * (2 * (circleRadius + (mStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2)))).toInt()
+        extraWidthIncase = setWidthData(lineLength,circleRadius)
+        return ((statusCount * (2 * (circleRadius + (mStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthIncase).toInt()
+    }
+
+
+    private fun setWidthData(lineLength: Float, circleRadius: Float):Float {
+        var adjacentExtraWidthForView = 0.0f
+        for (i in 0 until statusData.size){
+
+            if(i==0 || i==statusCount-1){
+                val extraWidth = findAdjustWidthForExtremes(statusData[i].text,lineLength,circleRadius);
+                adjacentExtraWidthForView+=extraWidth;
+                val minWidthForExtreme = (2 * circleRadius + mStrokeWidth);
+                if(extraWidth>0){
+                    statusData[i].width = minWidthForExtreme + 2 * extraWidth;
+
+                }else{
+                    statusData[i].width = minWidthForExtreme;
+                }
+            }else{
+                statusData[i].width = (lineLength + lineGap*2) + (2 * circleRadius + mStrokeWidth);
+            }
+        }
+        return adjacentExtraWidthForView;
+    }
+
+    private fun findAdjustWidthForExtremes(text: String, lineLength: Float, circleRadius: Float):Float {
+        val totalWidth = getTextWidth(textPaint, text).toFloat();
+        val actualWidth = (2*(circleRadius + mStrokeWidth/2));
+        val extraWidth = Math.max(totalWidth, actualWidth)
+        return if(extraWidth==totalWidth){
+              Math.min((lineLength + lineGap * 2)/2,(totalWidth-actualWidth)/2)
+        }else{
+            0.0f
+        }
+
     }
 
     override fun getSuggestedMinimumHeight(): Int {
-        return ((circleRadius  * 2)+mStrokeWidth).toInt()
+
+        var labelheight = 0.0f
+        for(item in statusData){
+            labelheight = Math.max(labelheight,setLabelsHeight(textPaint,item));
+        }
+
+        return  (((circleRadius  * 2)+mStrokeWidth) +labelheight ).toInt();
     }
 
 
@@ -210,7 +273,7 @@ class StatusView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-        for (item in statusData) {
+        for (item in drawingData) {
 
             if (item.circleItem.fillPaint != null) {
                 canvas?.drawCircle(item.circleItem.center.x, item.circleItem.center.y, item.circleItem.radius, item.circleItem.fillPaint)
@@ -230,6 +293,23 @@ class StatusView @JvmOverloads constructor(
                 } else if (item.textData.text != null && item.textData.paint != null) {
 
                     canvas?.drawText(item.textData.text, item.textData.x, item.textData.y, item.textData.paint)
+
+                }
+
+            }
+            if (item.labelData != null) {
+
+                if (item.labelData.drawableItem != null) {
+                    val drawableItem: DrawableItem = item.labelData.drawableItem
+                    drawableItem.drawable.bounds = drawableItem.rect
+                    item.labelData.drawableItem.drawable.draw(canvas)
+
+                } else if (item.labelData.text != null && item.labelData.paint != null && item.labelData.staticLayout!=null) {
+
+                    canvas?.save();
+                    canvas?.translate(item.labelData.x, item.labelData.y);
+                    item.labelData.staticLayout.draw(canvas)
+                    canvas?.restore()
 
                 }
 
@@ -272,8 +352,14 @@ class StatusView @JvmOverloads constructor(
 
             var lineItem: StatusView.LineItem? = null
             var statusItemText: StatusView.StatusItemText? = null
+            var labelItemText: StatusView.StatusItemText? = null
 
-            if (i != 0) {
+            if(i==0){
+                if(statusData.size>0){
+                    val minWidthForExtreme = 2 * circleRadius + mStrokeWidth;
+                    lastPoint.x+= Math.max(0.0f, (statusData[0].width - minWidthForExtreme)/2);
+                }
+            }else{
                 lastPoint.x += lineGap;
                 lineItem = LineItem(PointF(lastPoint.x, lastPoint.y), PointF(lastPoint.x + lineLength, lastPoint.y), linePaint)
                 lastPoint.x = lineItem.end.x + lineGap +  (mStrokeWidth / 2)
@@ -282,6 +368,11 @@ class StatusView @JvmOverloads constructor(
 
             val circleItem = CircleItem(PointF((lastPoint.x + circleRadius), lastPoint.y), circleRadius, circleStrokePaint, circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f) + (mStrokeWidth / 2)
+
+            if(i<statusData.size){
+                labelItemText = StatusItemText(statusData[i].text, textPaint,circleItem.center.x, circleItem.center.y + circleRadius + mStrokeWidth/2,
+                        staticLayout = statusData[i].staticLayout)
+            }
 
 
 
@@ -303,7 +394,7 @@ class StatusView @JvmOverloads constructor(
 
 
 
-            statusData.add(Item(statusItemText, circleItem, lineItem))
+            drawingData.add(Item(statusItemText, circleItem, lineItem,labelItemText))
 
 
         }
@@ -311,8 +402,40 @@ class StatusView @JvmOverloads constructor(
 
     }
 
+
+    private fun getTextWidth(paint:Paint, text:String):Int{
+        val measuringRect = Rect()
+        paint.getTextBounds(text, 0, text.length, measuringRect)
+        return measuringRect.width()
+    }
+
+
+
     private fun containsFlag(flagSet: Int, flag: Int): Boolean {
         return flagSet or flag == flagSet
     }
+
+
+
+
+    private fun  setLabelsHeight(textPaint:TextPaint, labelInfo: LabelInfo):Float{
+        val staticLayoutHeight = getStaticLayout(labelInfo.text, textPaint, labelInfo.width)
+        labelInfo.staticLayout = staticLayoutHeight;
+        labelInfo.height = staticLayoutHeight.height.toFloat()
+        return labelInfo.height;
+    }
+
+
+    private fun getStaticLayout(text: String, textPaint: TextPaint, width: Float): StaticLayout {
+        val alignment = Layout.Alignment.ALIGN_NORMAL
+        val spacingMultiplier = 1f
+        val spacingAddition = 0f
+        val includePadding = false
+        val myStaticLayout = StaticLayout(text, textPaint, width.toInt(), alignment, spacingMultiplier, spacingAddition, includePadding)
+        return myStaticLayout
+    }
+
+
+
 
 }
