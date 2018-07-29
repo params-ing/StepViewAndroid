@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">LearningCustomvViews</string>
     <string name="customViewLabel">Fan Control</string>
+
+    <string-array name="statuses">
+        <item>Pending</item>
+        <item>Dispatching</item>
+        <item>On the Way</item>
+        <item>Delivered</item>
+
+    </string-array>
 </resources>
