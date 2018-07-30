@@ -30,6 +30,7 @@
         <attr name="inccomplete_drawable" format="reference"/>
         <attr name="drawCount" format="boolean"/>
         <attr name="lineGap" format="dimension"/>
+        <attr name="labelTopMargin" format="dimension"/>
         <attr name="android:entries" />
     </declare-styleable>
 

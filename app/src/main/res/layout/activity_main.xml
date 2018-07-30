@@ -28,6 +28,7 @@
         app:circleStrokeColor="@android:color/black"
         app:textColor="@android:color/black"
         app:textSize="12sp"
+        app:labelTopMargin="10dp"
         app:textSizeLabels="15sp"
         android:entries="@array/statuses"
         app:textColorLabels="@color/colorPrimary"

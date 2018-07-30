@@ -8,8 +8,7 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.View
-
-
+import java.lang.IllegalStateException
 
 
 /**
@@ -21,7 +20,6 @@ class StatusView @JvmOverloads constructor(
 
         /*
          TODO
-        Only in wrap content check
        Status Labels margin from top or sides?
        Text Appearance?
        Renaming variables & Set radius programatically etc.g
@@ -64,6 +62,7 @@ class StatusView @JvmOverloads constructor(
     private var circleStrokeWidth: Float = 2.0f //dp
     private var mLineWidth: Float = 2.0f //dp
     private var lineGap = 0.0f
+    private var labelTopMargin = 0.0f
 
     private var mDrawCountText: Boolean = true
     private var completeDrawable: Drawable? = null
@@ -126,6 +125,7 @@ class StatusView @JvmOverloads constructor(
             inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inccomplete_drawable)
             mDrawCountText = a.getBoolean(R.styleable.StatusView_drawCount, mDrawCountText)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
+            labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
 
 
             lineColor = a.getColor(R.styleable.StatusView_lineColor, lineColor)
@@ -241,13 +241,21 @@ class StatusView @JvmOverloads constructor(
             labelheight = Math.max(labelheight,setLabelsHeight(textPaintLabels,item))
         }
 
-        return  (((circleRadius  * 2)+circleStrokeWidth) +labelheight ).toInt()
+        return  (((circleRadius  * 2)+circleStrokeWidth) + labelheight + labelTopMargin).toInt()
     }
 
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val desiredWidth = paddingLeft + paddingRight + suggestedMinimumWidth
         val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
+
+        val measureSpecWidth = MeasureSpec.getMode(widthMeasureSpec);
+        val measureSpecHeight = MeasureSpec.getMode(heightMeasureSpec);
+        if(measureSpecHeight!=MeasureSpec.AT_MOST || measureSpecWidth!=MeasureSpec.AT_MOST){
+            throw IllegalStateException("Width and height should be wrap_content")
+        }
+
+
 
         val measuredWidth = resolveSize(desiredWidth, widthMeasureSpec)
         val measuredHeight = resolveSize(desiredHeight, heightMeasureSpec)
@@ -353,7 +361,7 @@ class StatusView @JvmOverloads constructor(
             lastPoint.x += ((circleRadius) * 2.0f) + (circleStrokeWidth / 2)
 
             if(i<statusData.size){
-                labelItemText = LabelItemText(circleItem.center.x, circleItem.center.y + circleRadius + circleStrokeWidth/2, statusData[i].staticLayout)
+                labelItemText = LabelItemText(circleItem.center.x, circleItem.center.y + circleRadius + circleStrokeWidth/2 + labelTopMargin, statusData[i].staticLayout)
             }
 
 
