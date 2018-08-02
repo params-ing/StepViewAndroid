@@ -411,7 +411,7 @@ class StatusView @JvmOverloads constructor(
                 adjacentExtraWidthForView+=extraWidth
                 val minWidthForExtreme = (2 * circleRadius + circleStrokeWidth)
                 if(extraWidth>0){
-                    statusData[i].width = minWidthForExtreme + 2 * extraWidth
+                    statusData[i].width = minWidthForExtreme + extraWidth
 
                 }else{
                     statusData[i].width = minWidthForExtreme
@@ -424,11 +424,11 @@ class StatusView @JvmOverloads constructor(
     }
 
     private fun findAdjustWidthForExtremes(text: String, lineLength: Float, circleRadius: Float):Float {
-        val totalWidth = getTextWidth(textPaintLabels, text).toFloat()
+        val totalWidth = getTextWidth(textPaintLabels, text)
         val actualWidth = (2*(circleRadius + circleStrokeWidth/2))
         val extraWidth = Math.max(totalWidth, actualWidth)
         return if(extraWidth==totalWidth){
-            Math.min((lineLength + lineGap * 2)/2,(totalWidth-actualWidth)/2)
+            Math.min((lineLength + lineGap*2),(totalWidth-actualWidth))
         }else{
             0.0f
         }
@@ -436,10 +436,8 @@ class StatusView @JvmOverloads constructor(
     }
 
 
-    private fun getTextWidth(paint:Paint, text:String):Int{
-        val measuringRect = Rect()
-        paint.getTextBounds(text, 0, text.length, measuringRect)
-        return measuringRect.width()
+    private fun getTextWidth(paint:Paint, text:String):Float{
+        return paint.measureText(text)
     }
 
 
