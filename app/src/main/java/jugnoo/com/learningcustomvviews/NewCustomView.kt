@@ -660,15 +660,15 @@ class PieChart : ViewGroup {
         mTextPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         mTextPaint!!.color = mTextColor
         if (mTextHeight == 0f) {
-            mTextHeight = mTextPaint!!.textSize
+            mTextHeight = mTextPaint!!.textSizeStatus
         } else {
-            mTextPaint!!.textSize = mTextHeight
+            mTextPaint!!.textSizeStatus = mTextHeight
         }
 
         // Set up the paint for the pie slices
         mPiePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         mPiePaint!!.style = Paint.Style.FILL
-        mPiePaint!!.textSize = mTextHeight
+        mPiePaint!!.textSizeStatus = mTextHeight
 
         // Set up the paint for the shadow
         mShadowPaint = Paint(0)

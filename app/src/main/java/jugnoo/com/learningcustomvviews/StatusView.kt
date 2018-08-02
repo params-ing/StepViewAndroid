@@ -3,12 +3,15 @@ package jugnoo.com.learningcustomvviews
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.support.v4.view.ViewCompat
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.View
 import java.lang.IllegalStateException
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 
 /**
@@ -18,17 +21,19 @@ class StatusView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+
         /*
          TODO
-       Status Labels margin from top or sides?
-       Text Appearance?
-       Renaming variables & Set radius programatically etc.g
-
+        //dp to px for default value
+        //if status count is 1?
        --- LOW PRIORITY ---
        Pass font to textView
+       Text Appearance?
        LTR Support
        Optimise Calculations
        Orientation draw vertical too
+       magnify current circle size
+       Display status above|bottom
       */
 
     companion object {
@@ -40,71 +45,255 @@ class StatusView @JvmOverloads constructor(
     /**
      * Circle stroke paints for incomplete & complete status
      */
-    private var circleStrokePaint: Paint? = null
-    private var circleStrokePaintIncomplete: Paint? = null
+    private var mCircleStrokePaint: Paint? = null
+    private var mCircleStrokePaintIncomplete: Paint? = null
 
-    private var circleFillPaint: Paint? = null
-    private var circleFillPaintIncomplete: Paint? = null
+    private var mCircleFillPaint: Paint? = null
+    private var mCircleFillPaintIncomplete: Paint? = null
 
-    private var textPaint: TextPaint
-    private lateinit var textPaintIncomplete: TextPaint
-
-    private var linePaint: Paint
-    private lateinit var linePaintIncomplete: Paint
-
-    private lateinit var textPaintLabels: TextPaint
+    private lateinit var mLinePaint: Paint
+    private lateinit var mLinePaintIncomplete: Paint
+    private lateinit var mTextPaintStatus: TextPaint
+    private lateinit var mTextPaintLabelsIncomplete: TextPaint
+    private lateinit var mTextPaintLabels: TextPaint
 
 
-    private var statusCount: Int = 4
-    private var completeCount: Int = INVALID_STATUS_COUNT
-    private var circleRadius: Float = 25.0f //dp
-    private var lineLength: Float = 50.0f //dp
-    private var circleStrokeWidth: Float = 2.0f //dp
-    private var mLineWidth: Float = 2.0f //dp
-    private var lineGap = 0.0f
-    private var labelTopMargin = 0.0f
 
-    private var mDrawCountText: Boolean = true
-    private var completeDrawable: Drawable? = null
-    private var inCompleteDrawable: Drawable? = null
+    /**
+    * The total number of statuses to be displayed
+    */
+    var statusCount: Int by OnLayoutProp(4)
+
+    /*
+    The count up to  which status has been completed
+    */
+    var completeCount:  Int by OnLayoutProp(INVALID_STATUS_COUNT)
 
 
-    private val lastPoint = PointF()
+    /*
+     Radius of each circle to be drawn
+     #Note: This does not include stroke width
+     */
+
+    var circleRadius: Float  by OnLayoutProp(25.0f) //dp
+
+
+    /**
+     *  Length of line to be drawn between circles
+     *  #Note: This does not include line gap
+     */
+     var lineLength: Float by OnLayoutProp(50.0f) //dp
+
+    /**
+     * Stroke width of each circle to be drawn
+     */
+     var circleStrokeWidth: Float by OnLayoutProp(2.0f) //dp
+
+
+    /**
+     * Margin or gap on each side of circle.
+     * Note: This does not apply for extreme sides.
+     */
+     var lineGap by OnLayoutProp( 0.0f)
+
+
+    /**
+     * Top Margin of Labels from circle
+     */
+     var labelTopMargin by OnLayoutProp( 0.0f)
+
+    /**
+     * Stroke width of the line between circles (default dp)
+     */
+    var mLineStrokeWidth: Float by OnValidateProp(2.0f) {
+        mLinePaint.strokeWidth = mLineStrokeWidth
+        mLinePaintIncomplete.strokeWidth = mLineStrokeWidth
+    }
+
+    /**
+     * Color of line between circles
+     */
+    var lineColor: Int by OnValidateProp(Color.BLACK){
+        mLinePaint.color = lineColor
+    }
+
+    /**
+     * Color of line between circles for incomplete statuses
+     */
+    var lineColorIncomplete: Int by OnValidateProp(Color.BLACK){
+        mLinePaintIncomplete.color = lineColorIncomplete
+    }
+
+    /**
+     * Fill Color of circles for complete statuses
+     */
+    var circleFillColor: Int by OnValidateProp(Color.CYAN){
+        mCircleFillPaint?.color = circleFillColor
+
+    }
+    /**
+     * Fill Color of circles for incomplete statuses
+     */
+    var circleFillColorIncomplete: Int by OnValidateProp(Color.CYAN){
+        mCircleFillPaintIncomplete?.color = circleFillColorIncomplete
+
+    }
+    /**
+     * Stroke Color of circles for complete statuses
+     */
+    var circleStrokeColor: Int by OnValidateProp(Color.BLACK){
+        mCircleStrokePaint?.color = circleStrokeColor
+
+    }
+    /**
+     * Stroke Color of circles for incomplete statuses
+     */
+    var circleStrokeColorIncomplete: Int by OnValidateProp(Color.BLACK){
+        mCircleStrokePaintIncomplete?.color = circleStrokeColorIncomplete
+    }
+    /**
+     * Text Color of labels
+     *
+     */
+    var textColorLabels: Int by OnValidateProp(Color.BLACK){
+        mTextPaintLabels.color = textColorLabels
+    }
+
+    /**
+     * Text Color of labels  Incomplete
+     */
+    var textColorLabelsIncomplete: Int by OnValidateProp(Color.BLACK){
+        mTextPaintLabelsIncomplete.color = textColorLabelsIncomplete
+    }
+
+    /**
+     *  Text Size of Labels
+     */
+    var textSizeLabels: Float by OnValidateProp(15.0f ){//sp
+        mTextPaintLabels.textSize = textSizeLabels
+        mTextPaintLabelsIncomplete.textSize = textSizeLabels
+
+    }
+
+    /**
+     * Text Color of Statuses
+     */
+    var textColorStatus: Int by OnValidateProp(Color.BLACK){
+        mTextPaintStatus.color = textColorStatus
+        for(item in statusData){
+            item.staticLayout?.paint?.color = textColorStatus
+        }
+    }
+
+    /**
+     * Text Size of statuses
+     */
+
+    var textSizeStatus: Float by OnLayoutProp(14.0f){
+        mTextPaintStatus.textSize = textSizeStatus
+    }
+
+    /**
+     *  A boolean which decides if to draw labels or not
+     */
+
+    var mDrawLabels: Boolean by OnValidateProp(false){
+        setDrawingDimensions()
+    }
+
+    /**
+     * A drawable for complete status
+     * #Note: If this is set then it would be given preference over the labels.
+     */
+    var completeDrawable: Drawable? by OnValidateProp(null){
+        setDrawingDimensions()
+    }
+
+    /**
+     * A drawable for incomplete statuses
+     * #Note: If this is set then it would be given preference over the labels.
+     */
+    var inCompleteDrawable: Drawable? by OnValidateProp(null){
+        setDrawingDimensions()
+    }
+
+    /**
+     * circle fill type. Has been set to fill by default.
+     *
+     * To change pass a single flag
+     * To set both the flags i.e (fill & stroke) pass (CIRCLE_COLOR_TYPE_FILL | CIRCLE_COLOR_TYPE_STROKE)
+     *
+     */
+    var circleColorType:Int by Delegates.observable(CIRCLE_COLOR_TYPE_FILL)
+    { prop, old, new ->
+        if(ViewCompat.isLaidOut(this)){
+
+
+            initCirclePaints()
+            val oldHadStrokeFlagSet = containsFlag(old, CIRCLE_COLOR_TYPE_STROKE)
+            val newHasStrokeFlagSet = containsFlag(new, CIRCLE_COLOR_TYPE_STROKE)
+
+            if((oldHadStrokeFlagSet && !newHasStrokeFlagSet) || !oldHadStrokeFlagSet && newHasStrokeFlagSet)
+            {
+                requestLayout()
+            }else{
+                setDrawingDimensions()
+                invalidate()
+            }
+        }
+    }
+
+
+    /**
+     * This contains list of LabelInfo which stores static layout and text.
+     * To the caller it is a list of string and custom getter setters have been made accordingly
+     *
+     */
+    private var statusData:MutableList<StatusInfo> by OnLayoutProp(mutableListOf())
+
+    /**
+     * Extracts List<String> from List<LabelInfo> and returns back to the caller
+     */
+    fun getStatusList():List<String> =  statusData.map { it.text  }
+
+    /**
+     * Creates List<LabelInfo> from List<String> by passing default values.
+     * #Note: It trims any extra statuses (if size is greater than statusCount)
+     */
+    fun setStatusList(list: List<String>) {
+        //to make sure original list is not modified convert to mutableList
+       val input =  list.toMutableList().dropLast(statusCount)
+
+        statusData  = (input.map{StatusInfo(it)}).toMutableList()
+
+
+    }
+
+
+
+    /**
+     * Stores all the drawing data that is used while drawing on canvas
+     */
     private var drawingData = mutableListOf<Item>()
-    private var statusData = mutableListOf<LabelInfo>()
+
 
 
 
 
     //To store the data of each circle
-    private class Item(val textData: StatusItemText?, val circleItem: CircleItem, val lineItem: LineItem?,val labelData: LabelItemText?=null)
+    private class Item(val textData: LabelItemText?, val circleItem: CircleItem, val lineItem: LineItem?, val labelData: StatusItemText?=null)
 
-    private class StatusItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null)
-    private class LabelItemText(val x: Float = 0.0f, val y: Float = 0.0f,val staticLayout: StaticLayout? = null)
+    private class LabelItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null)
+    private class StatusItemText(val x: Float = 0.0f, val y: Float = 0.0f, val staticLayout: StaticLayout? = null)
     private class CircleItem(val center: PointF, val radius: Float, val strokePaint: Paint?, val fillPaint: Paint?)
     private class LineItem(val start: PointF, val end: PointF, val paint: Paint)
     private class DrawableItem(val rect: Rect, val drawable: Drawable)
-    private data class LabelInfo(val text:String,var width:Float=0.0f,var height:Float=0.0f,var staticLayout: StaticLayout? = null)
+    private class StatusInfo(val text:String, var width:Float=0.0f, var height:Float=0.0f, var staticLayout: StaticLayout? = null)
 
 
 
     init {
 
-        var lineColor: Int = Color.BLACK
-        var circleFillColor: Int = Color.CYAN
-        var circleStrokeColor: Int = Color.BLACK
-        var textColor: Int = Color.BLACK
-
-        val lineColorIncomplete: Int
-        val circleFillColorIncomplete: Int
-        val circleStrokeColorIncomplete: Int
-        val textColorIncomplete: Int
-        var textColorLabels:Int = Color.BLACK
-
-        var textSize = 14.0f //sp
-        var textSizeLabels = 15.0f //sp
-
-        var circleColorType = CIRCLE_COLOR_TYPE_FILL
 
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.StatusView, 0, 0)
 
@@ -118,12 +307,12 @@ class StatusView @JvmOverloads constructor(
 
 
             circleStrokeWidth = a.getDimension(R.styleable.StatusView_circleStrokeWidth, circleStrokeWidth)
-            mLineWidth = a.getDimension(R.styleable.StatusView_lineWidth, mLineWidth)
+            mLineStrokeWidth = a.getDimension(R.styleable.StatusView_lineWidth, mLineStrokeWidth)
 
 
             completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
             inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inccomplete_drawable)
-            mDrawCountText = a.getBoolean(R.styleable.StatusView_drawCount, mDrawCountText)
+            mDrawLabels = a.getBoolean(R.styleable.StatusView_drawCount, mDrawLabels)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
 
@@ -131,13 +320,13 @@ class StatusView @JvmOverloads constructor(
             lineColor = a.getColor(R.styleable.StatusView_lineColor, lineColor)
             circleFillColor = a.getColor(R.styleable.StatusView_circleColor, circleFillColor)
             circleStrokeColor = a.getColor(R.styleable.StatusView_circleStrokeColor, circleStrokeColor)
-            textColor = a.getColor(R.styleable.StatusView_textColor, textColor)
+            textColorStatus = a.getColor(R.styleable.StatusView_textColor, textColorStatus)
             textColorLabels = a.getColor(R.styleable.StatusView_textColorLabels, textColorLabels)
-            textSize = a.getDimension(R.styleable.StatusView_textSize, textSize)
+            textSizeStatus = a.getDimension(R.styleable.StatusView_textSize, textSizeStatus)
             textSizeLabels = a.getDimension(R.styleable.StatusView_textSizeLabels, textSizeLabels)
 
             circleColorType = a.getInteger(R.styleable.StatusView_circleColorType, circleColorType)
-            textColorIncomplete = a.getColor(R.styleable.StatusView_textColorIncomplete, textColor)
+            textColorLabelsIncomplete = a.getColor(R.styleable.StatusView_textColorIncomplete, textColorStatus)
             lineColorIncomplete = a.getColor(R.styleable.StatusView_lineColorIncomplete, lineColor)
             circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorInComplete, circleFillColor)
             circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete, circleStrokeColor)
@@ -145,7 +334,7 @@ class StatusView @JvmOverloads constructor(
             val entries = a.getTextArray(R.styleable.StatusView_android_entries)
             if (entries != null) {
                 for(entry in entries){
-                    statusData.add(LabelInfo(entry.toString()))
+                    statusData.add(StatusInfo(entry.toString()))
                 }
             }
 
@@ -155,93 +344,99 @@ class StatusView @JvmOverloads constructor(
         }
 
 
-        if (statusCount < 0) statusCount = 4
-        if (completeCount < INVALID_STATUS_COUNT) completeCount = INVALID_STATUS_COUNT
-
-        if(statusData.size>statusCount){
-
-            while(statusData.size!=statusCount){
-                statusData.removeAt(statusData.size-1)
-            }
-        }
 
 
+        initCirclePaints()
 
+
+        mLinePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        mLinePaint.style = Paint.Style.STROKE
+        mLinePaint.strokeWidth = mLineStrokeWidth
+        mLinePaint.color = lineColor
+
+
+        mTextPaintStatus = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        mTextPaintStatus.style = Paint.Style.FILL
+        mTextPaintStatus.textAlign = Paint.Align.CENTER
+        mTextPaintStatus.color = textColorStatus
+        mTextPaintStatus.textSize = textSizeStatus
+
+
+
+        mLinePaintIncomplete = Paint(mLinePaint)
+        mLinePaintIncomplete.color = lineColorIncomplete
+
+        mTextPaintLabels = TextPaint(mTextPaintStatus)
+        mTextPaintLabels.textSize = textSizeLabels
+        mTextPaintLabels.color = textColorLabels
+
+
+        mTextPaintLabelsIncomplete = TextPaint(mTextPaintLabels)
+        mTextPaintLabelsIncomplete.color = textColorLabelsIncomplete
+
+
+    }
+
+    private fun initCirclePaints() {
         if (containsFlag(circleColorType, CIRCLE_COLOR_TYPE_STROKE)) {
-            circleStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-            circleStrokePaint?.style = Paint.Style.STROKE
-            circleStrokePaint?.strokeWidth = circleStrokeWidth
-            circleStrokePaint?.color = circleStrokeColor
+            if (mCircleStrokePaint == null) {
 
-            if (isShwoingIncompleteStatus()) {
-                circleStrokePaintIncomplete = Paint(circleStrokePaint)
-                circleStrokePaintIncomplete?.color = circleStrokeColorIncomplete
+                mCircleStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+                mCircleStrokePaint?.style = Paint.Style.STROKE
+                mCircleStrokePaint?.strokeWidth = circleStrokeWidth
+                mCircleStrokePaint?.color = circleStrokeColor
+            }
+
+            if (isShowingIncompleteStatus()) {
+                if (mCircleStrokePaintIncomplete == null) {
+                    mCircleStrokePaintIncomplete = Paint(mCircleStrokePaint)
+                    mCircleStrokePaintIncomplete?.color = circleStrokeColorIncomplete
+                }
             }
 
         } else {
             circleStrokeWidth = 0.0f
+            mCircleStrokePaint = null
+            mCircleStrokePaintIncomplete = null
         }
 
         if (containsFlag(circleColorType, CIRCLE_COLOR_TYPE_FILL)) {
-            circleFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-            circleFillPaint?.style = Paint.Style.FILL
-            circleFillPaint?.color = circleFillColor
-
-            if (isShwoingIncompleteStatus()) {
-                circleFillPaintIncomplete = Paint(circleFillPaint)
-                circleFillPaintIncomplete?.color = circleFillColorIncomplete
+            if (mCircleFillPaint == null) {
+                mCircleFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+                mCircleFillPaint?.style = Paint.Style.FILL
+                mCircleFillPaint?.color = circleFillColor
             }
-        }
-
-
-        linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        linePaint.style = Paint.Style.STROKE
-        linePaint.strokeWidth = mLineWidth
-        linePaint.color = lineColor
-
-
-        textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-        textPaint.style = Paint.Style.FILL
-        textPaint.textAlign = Paint.Align.CENTER
-        textPaint.color = textColor
-        textPaint.textSize = textSize
-
-
-        if (isShwoingIncompleteStatus()) {
-            linePaintIncomplete = Paint(linePaint)
-            linePaintIncomplete.color = lineColorIncomplete
-
-            textPaintIncomplete = TextPaint(textPaint)
-            textPaintIncomplete.color = textColorIncomplete
-        }
-
-        if(statusData.size>0){
-            textPaintLabels = TextPaint(textPaint)
-            textPaintLabels.textSize = textSizeLabels
-            textPaintLabels.color = textColorLabels
+            if (isShowingIncompleteStatus()) {
+                if (mCircleFillPaintIncomplete == null) {
+                    mCircleFillPaintIncomplete = Paint(mCircleFillPaint)
+                    mCircleFillPaintIncomplete?.color = circleFillColorIncomplete
+                }
+            }
+        } else {
+            mCircleFillPaint = null
         }
     }
 
 
-    private fun isShwoingIncompleteStatus() =
+    private fun isShowingIncompleteStatus() =
             completeCount != INVALID_STATUS_COUNT && completeCount < statusCount
 
 
     override fun getSuggestedMinimumWidth(): Int {
-        val extraWidthIncase = setWidthData(lineLength,circleRadius)
-        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthIncase).toInt()
+        val extraWidthInCase = setWidthData(lineLength,circleRadius)
+        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthInCase).toInt()
     }
 
 
 
     override fun getSuggestedMinimumHeight(): Int {
 
-        var labelheight = 0.0f
+        var labelHeight = 0.0f
         for(item in statusData){
-            labelheight = Math.max(labelheight,setLabelsHeight(textPaintLabels,item))
+            labelHeight = Math.max(labelHeight,setLabelsHeight(mTextPaintStatus,item))
         }
 
-        return  (((circleRadius  * 2)+circleStrokeWidth) + labelheight + labelTopMargin).toInt()
+        return  (((circleRadius * 2)+circleStrokeWidth) + labelHeight + labelTopMargin).toInt()
     }
 
 
@@ -249,8 +444,8 @@ class StatusView @JvmOverloads constructor(
         val desiredWidth = paddingLeft + paddingRight + suggestedMinimumWidth
         val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
-        val measureSpecWidth = MeasureSpec.getMode(widthMeasureSpec);
-        val measureSpecHeight = MeasureSpec.getMode(heightMeasureSpec);
+        val measureSpecWidth = MeasureSpec.getMode(widthMeasureSpec)
+        val measureSpecHeight = MeasureSpec.getMode(heightMeasureSpec)
         if(measureSpecHeight!=MeasureSpec.AT_MOST || measureSpecWidth!=MeasureSpec.AT_MOST){
             throw IllegalStateException("Width and height should be wrap_content")
         }
@@ -265,6 +460,11 @@ class StatusView @JvmOverloads constructor(
         setMeasuredDimension(measuredWidth, measuredHeight)
 
 
+
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+      setDrawingDimensions()
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -314,36 +514,38 @@ class StatusView @JvmOverloads constructor(
         }
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        setDrawingDimensions()
-    }
 
-
+    /**
+     *  Sets data in DrawingData class that is to be drawn by Canvas
+     */
     private fun setDrawingDimensions() {
 
+        /**
+         * For keeping reference where last point was drawn
+         */
+        val lastPoint = PointF()
         lastPoint.x = paddingLeft.toFloat() + (circleStrokeWidth / 2)
         lastPoint.y = paddingTop.toFloat() + (circleRadius + (circleStrokeWidth / 2))
         for (i in 0 until statusCount) {
 
-            var circleStrokePaint = this.circleStrokePaint
-            var circleFillPaint = this.circleFillPaint
-            var textPaint = this.textPaint
-            var linePaint = this.linePaint
+            var circleStrokePaint = this.mCircleStrokePaint
+            var circleFillPaint = this.mCircleFillPaint
+            var textPaintLabel = this.mTextPaintLabels
+            var linePaint = this.mLinePaint
             var itemDrawable: Drawable? = completeDrawable
-            if (completeCount > -1 && i >= completeCount) {
-                circleStrokePaint = circleStrokePaintIncomplete
-                circleFillPaint = circleFillPaintIncomplete
-                textPaint = textPaintIncomplete
-                linePaint = linePaintIncomplete
+            if (completeCount in (0)..i) {
+                circleStrokePaint = mCircleStrokePaintIncomplete
+                circleFillPaint = mCircleFillPaintIncomplete
+                textPaintLabel = mTextPaintLabelsIncomplete
+                linePaint = mLinePaintIncomplete
                 itemDrawable = inCompleteDrawable
 
             }
 
 
             var lineItem: StatusView.LineItem? = null
-            var statusItemText: StatusView.StatusItemText? = null
-            var labelItemText: StatusView.LabelItemText? = null
+            var statusItemText: StatusView.LabelItemText? = null
+            var labelItemText: StatusView.StatusItemText? = null
 
             if(i==0){
                 if(statusData.size>0){
@@ -361,7 +563,7 @@ class StatusView @JvmOverloads constructor(
             lastPoint.x += ((circleRadius) * 2.0f) + (circleStrokeWidth / 2)
 
             if(i<statusData.size){
-                labelItemText = LabelItemText(circleItem.center.x, circleItem.center.y + circleRadius + circleStrokeWidth/2 + labelTopMargin, statusData[i].staticLayout)
+                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + circleRadius + circleStrokeWidth/2 + labelTopMargin, statusData[i].staticLayout)
             }
 
 
@@ -372,20 +574,17 @@ class StatusView @JvmOverloads constructor(
                 val xPos = circleItem.center.x.toInt()
                 val yPos = circleItem.center.y.toInt()
                 val drawableRect = Rect(xPos - width / 2, yPos - height / 2, xPos + width / 2, yPos + height / 2)
-                statusItemText = StatusItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
+                statusItemText = LabelItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
 
-            } else if (mDrawCountText) {
+            } else if (mDrawLabels) {
                 val text: String = (i + 1).toString()
                 val measuringRect = Rect()
-                textPaint.getTextBounds(text, 0, text.length, measuringRect)
-                statusItemText = StatusItemText(text, textPaint, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
+                textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
+                statusItemText = LabelItemText(text, textPaintLabel, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
 
             }
 
-
-
             drawingData.add(Item(statusItemText, circleItem, lineItem,labelItemText))
-
 
         }
 
@@ -394,24 +593,35 @@ class StatusView @JvmOverloads constructor(
 
 
     /**
-     * Helper Functions
+     * checks if a flagSet contains a flag
+     *
      */
-
 
     private fun containsFlag(flagSet: Int, flag: Int): Boolean {
         return flagSet or flag == flagSet
     }
 
+    /**
+     * @param lineLength lineLength of StatusView
+     * @param circleRadius circleRadius Of StatusView
+     *
+     * For non-extreme statuses:
+     * Function sets the width value to circleRadius + linelength/2 (left side) + linelength/2 (rightSide)
+     *
+     * For extreme statuses:
+     * It calculates value using findAdjustWidthForExtremes() as assigning the same width as
+     * non-extreme may end up giving extraPadding to the view
+     */
     private fun setWidthData(lineLength: Float, circleRadius: Float):Float {
         var adjacentExtraWidthForView = 0.0f
         for (i in 0 until statusData.size){
 
-            if(i==0 || i==statusCount-1){
+            if(i==0 || i==(statusCount-1)){
                 val extraWidth = findAdjustWidthForExtremes(statusData[i].text,lineLength,circleRadius)
                 adjacentExtraWidthForView+=extraWidth
                 val minWidthForExtreme = (2 * circleRadius + circleStrokeWidth)
                 if(extraWidth>0){
-                    statusData[i].width = minWidthForExtreme + extraWidth
+                    statusData[i].width = minWidthForExtreme + 2 * extraWidth
 
                 }else{
                     statusData[i].width = minWidthForExtreme
@@ -423,25 +633,40 @@ class StatusView @JvmOverloads constructor(
         return adjacentExtraWidthForView
     }
 
+    /**
+     * @param text Status text
+     * @param lineLength lineLength of StatusView
+     * @param circleRadius circleRadius Of StatusView
+     * @return Returns max width that an extreme label would need besides the circle Width
+     *  The return value does not exceed half the linelength on each side, since it would affect the symmetry.
+     *  i.e circleWidth < return value > linelength
+     */
     private fun findAdjustWidthForExtremes(text: String, lineLength: Float, circleRadius: Float):Float {
-        val totalWidth = getTextWidth(textPaintLabels, text)
+        val totalWidth = getTextWidth(mTextPaintStatus, text)
         val actualWidth = (2*(circleRadius + circleStrokeWidth/2))
         val extraWidth = Math.max(totalWidth, actualWidth)
         return if(extraWidth==totalWidth){
-            Math.min((lineLength + lineGap*2),(totalWidth-actualWidth))
+            Math.min((lineLength + lineGap*2),(totalWidth-actualWidth))/2
         }else{
             0.0f
         }
 
     }
 
-
+    /**
+     * Maximum width that a text would need
+     */
     private fun getTextWidth(paint:Paint, text:String):Float{
         return paint.measureText(text)
     }
 
 
-     private fun  setLabelsHeight(textPaint:TextPaint, labelInfo: LabelInfo):Float{
+    /**
+     * @param textPaint textPaint to be set on Labels
+     * @param labelInfo LabelInfo which contains width and text
+     * @return Height that the label would require
+     */
+     private fun  setLabelsHeight(textPaint:TextPaint, labelInfo: StatusInfo):Float{
         val staticLayoutHeight = getStaticLayout(labelInfo.text, textPaint, labelInfo.width)
         labelInfo.staticLayout = staticLayoutHeight
          labelInfo.height = staticLayoutHeight.height.toFloat()
@@ -449,12 +674,58 @@ class StatusView @JvmOverloads constructor(
      }
 
 
+    /**
+     *  @param text text to be shown
+     *  @param textPaint textPaint to be set on text
+     *  @param width available width
+     *  @return Static Layout which decides the height and auto-adjusts multiline text
+     */
     private fun getStaticLayout(text: String, textPaint: TextPaint, width: Float): StaticLayout {
         val alignment = Layout.Alignment.ALIGN_NORMAL
         val spacingMultiplier = 1f
         val spacingAddition = 0f
         val includePadding = false
         return StaticLayout(text, textPaint, width.toInt(), alignment, spacingMultiplier, spacingAddition, includePadding)
+    }
+
+
+    /**
+     * Delegate property used to requestLayout if any value changed
+     */
+    inner class OnLayoutProp<T> (private var field:T,inline private var func:()->Unit={}){
+        operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
+            field = v
+            if(ViewCompat.isLaidOut(this@StatusView)){
+                drawingData.clear()
+                func()
+                requestLayout()
+
+            }
+
+        }
+        operator fun getValue(thisRef: Any?,p: KProperty<*>):T{
+            return field
+        }
+
+    }
+
+    /**
+     * Delegate Property used to invalidate a layout after executing a custom function
+     */
+    inner class  OnValidateProp<T> (private var field:T,inline private var func:()->Unit={}){
+        operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
+            field = v
+            if(ViewCompat.isLaidOut(this@StatusView)){
+                func()
+                invalidate()
+
+            }
+
+        }
+        operator fun getValue(thisRef: Any?,p: KProperty<*>):T{
+            return field
+        }
+
     }
 
 

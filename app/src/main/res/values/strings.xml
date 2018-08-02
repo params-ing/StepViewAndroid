@@ -3,10 +3,10 @@
     <string name="customViewLabel">Fan Control</string>
 
     <string-array name="statuses">
-        <item>Pending</item>
+        <item>DispatchingDispatching</item>
         <item>Dispatching</item>
-        <item>On the Way</item>
         <item>Delivered</item>
+        <item>Verito</item>
 
     </string-array>
 </resources>

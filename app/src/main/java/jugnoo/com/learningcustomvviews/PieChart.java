@@ -726,15 +726,15 @@ public class PieChart extends ViewGroup {
         mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mTextPaint.setColor(mTextColor);
         if (mTextHeight == 0) {
-            mTextHeight = mTextPaint.getTextSize();
+            mTextHeight = mTextPaint.getTextSizeStatus();
         } else {
-            mTextPaint.setTextSize(mTextHeight);
+            mTextPaint.setTextSizeStatus(mTextHeight);
         }
 
         // Set up the paint for the pie slices
         mPiePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPiePaint.setStyle(Paint.Style.FILL);
-        mPiePaint.setTextSize(mTextHeight);
+        mPiePaint.setTextSizeStatus(mTextHeight);
 
         // Set up the paint for the shadow
         mShadowPaint = new Paint(0);
