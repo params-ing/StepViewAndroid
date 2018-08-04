@@ -27,7 +27,7 @@
         <attr name="lineColorIncomplete" format="color"/>
         <attr name="textColorIncomplete" format="color"/>
         <attr name="complete_drawable" format="reference"/>
-        <attr name="inccomplete_drawable" format="reference"/>
+        <attr name="inComplete_drawable" format="reference"/>
         <attr name="drawCount" format="boolean"/>
         <attr name="lineGap" format="dimension"/>
         <attr name="labelTopMargin" format="dimension"/>

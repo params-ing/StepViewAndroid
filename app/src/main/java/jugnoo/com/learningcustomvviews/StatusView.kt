@@ -8,6 +8,7 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.View
 import java.lang.IllegalStateException
 import kotlin.properties.Delegates
@@ -24,13 +25,10 @@ class StatusView @JvmOverloads constructor(
 
         /*
          TODO
-        //dp to px for default value
-        //if status count is 1?
-       --- LOW PRIORITY ---
        Pass font to textView
+       Ensure Text single line
        Text Appearance?
        LTR Support
-       Optimise Calculations
        Orientation draw vertical too
        magnify current circle size
        Display status above|bottom
@@ -75,19 +73,19 @@ class StatusView @JvmOverloads constructor(
      #Note: This does not include stroke width
      */
 
-    var circleRadius: Float  by OnLayoutProp(25.0f) //dp
+    var circleRadius: Float  by OnLayoutProp(20.0f.pxValue()) //dp
 
 
     /**
      *  Length of line to be drawn between circles
      *  #Note: This does not include line gap
      */
-     var lineLength: Float by OnLayoutProp(50.0f) //dp
+     var lineLength: Float by OnLayoutProp(30.0f.pxValue()) //dp
 
     /**
      * Stroke width of each circle to be drawn
      */
-     var circleStrokeWidth: Float by OnLayoutProp(2.0f) //dp
+     var circleStrokeWidth: Float by OnLayoutProp(2.0f.pxValue()) //dp
 
 
     /**
@@ -100,14 +98,14 @@ class StatusView @JvmOverloads constructor(
     /**
      * Top Margin of Labels from circle
      */
-     var labelTopMargin by OnLayoutProp( 0.0f)
+     var labelTopMargin by OnLayoutProp( 4.0f.pxValue())
 
     /**
-     * Stroke width of the line between circles (default dp)
+     * Stroke width of the line between circles (dp)
      */
-    var mLineStrokeWidth: Float by OnValidateProp(2.0f) {
-        mLinePaint.strokeWidth = mLineStrokeWidth
-        mLinePaintIncomplete.strokeWidth = mLineStrokeWidth
+    var lineStrokeWidth: Float by OnValidateProp(2.0f.pxValue()) {
+        mLinePaint.strokeWidth = lineStrokeWidth
+        mLinePaintIncomplete.strokeWidth = lineStrokeWidth
     }
 
     /**
@@ -169,7 +167,7 @@ class StatusView @JvmOverloads constructor(
     /**
      *  Text Size of Labels
      */
-    var textSizeLabels: Float by OnValidateProp(15.0f ){//sp
+    var textSizeLabels: Float by OnValidateProp(15.0f.pxValue(TypedValue.COMPLEX_UNIT_SP) ){//sp
         mTextPaintLabels.textSize = textSizeLabels
         mTextPaintLabelsIncomplete.textSize = textSizeLabels
 
@@ -189,7 +187,7 @@ class StatusView @JvmOverloads constructor(
      * Text Size of statuses
      */
 
-    var textSizeStatus: Float by OnLayoutProp(14.0f){
+    var textSizeStatus: Float by OnLayoutProp(14.0f.pxValue(TypedValue.COMPLEX_UNIT_SP)){
         mTextPaintStatus.textSize = textSizeStatus
     }
 
@@ -197,7 +195,7 @@ class StatusView @JvmOverloads constructor(
      *  A boolean which decides if to draw labels or not
      */
 
-    var mDrawLabels: Boolean by OnValidateProp(false){
+    var drawLabels: Boolean by OnValidateProp(false){
         setDrawingDimensions()
     }
 
@@ -233,7 +231,7 @@ class StatusView @JvmOverloads constructor(
             val oldHadStrokeFlagSet = containsFlag(old, CIRCLE_COLOR_TYPE_STROKE)
             val newHasStrokeFlagSet = containsFlag(new, CIRCLE_COLOR_TYPE_STROKE)
 
-            if((oldHadStrokeFlagSet && !newHasStrokeFlagSet) || !oldHadStrokeFlagSet && newHasStrokeFlagSet)
+            if((oldHadStrokeFlagSet && !newHasStrokeFlagSet) || (!oldHadStrokeFlagSet && newHasStrokeFlagSet))
             {
                 requestLayout()
             }else{
@@ -268,7 +266,6 @@ class StatusView @JvmOverloads constructor(
 
 
     }
-
 
 
     /**
@@ -307,12 +304,12 @@ class StatusView @JvmOverloads constructor(
 
 
             circleStrokeWidth = a.getDimension(R.styleable.StatusView_circleStrokeWidth, circleStrokeWidth)
-            mLineStrokeWidth = a.getDimension(R.styleable.StatusView_lineWidth, mLineStrokeWidth)
+            lineStrokeWidth = a.getDimension(R.styleable.StatusView_lineWidth, lineStrokeWidth)
 
 
             completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
-            inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inccomplete_drawable)
-            mDrawLabels = a.getBoolean(R.styleable.StatusView_drawCount, mDrawLabels)
+            inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inComplete_drawable)
+            drawLabels = a.getBoolean(R.styleable.StatusView_drawCount, drawLabels)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
 
@@ -351,7 +348,7 @@ class StatusView @JvmOverloads constructor(
 
         mLinePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         mLinePaint.style = Paint.Style.STROKE
-        mLinePaint.strokeWidth = mLineStrokeWidth
+        mLinePaint.strokeWidth = lineStrokeWidth
         mLinePaint.color = lineColor
 
 
@@ -423,7 +420,10 @@ class StatusView @JvmOverloads constructor(
 
 
     override fun getSuggestedMinimumWidth(): Int {
-        val extraWidthInCase = setWidthData(lineLength,circleRadius)
+        var extraWidthInCase = setWidthData(lineLength,circleRadius)
+        if(statusCount==1) {
+            extraWidthInCase *= 2
+        }
         return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthInCase).toInt()
     }
 
@@ -576,7 +576,7 @@ class StatusView @JvmOverloads constructor(
                 val drawableRect = Rect(xPos - width / 2, yPos - height / 2, xPos + width / 2, yPos + height / 2)
                 statusItemText = LabelItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
 
-            } else if (mDrawLabels) {
+            } else if (drawLabels) {
                 val text: String = (i + 1).toString()
                 val measuringRect = Rect()
                 textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
@@ -692,7 +692,7 @@ class StatusView @JvmOverloads constructor(
     /**
      * Delegate property used to requestLayout if any value changed
      */
-    inner class OnLayoutProp<T> (private var field:T,inline private var func:()->Unit={}){
+    inner class OnLayoutProp<T> (private var field:T, private inline var func:()->Unit={}){
         operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
             field = v
             if(ViewCompat.isLaidOut(this@StatusView)){
@@ -712,7 +712,7 @@ class StatusView @JvmOverloads constructor(
     /**
      * Delegate Property used to invalidate a layout after executing a custom function
      */
-    inner class  OnValidateProp<T> (private var field:T,inline private var func:()->Unit={}){
+    inner class  OnValidateProp<T> (private var field:T, private inline var func:()->Unit={}){
         operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
             field = v
             if(ViewCompat.isLaidOut(this@StatusView)){
@@ -728,7 +728,9 @@ class StatusView @JvmOverloads constructor(
 
     }
 
-
+    private fun Float.pxValue(unit:Int = TypedValue.COMPLEX_UNIT_DIP):Float{
+        return TypedValue.applyDimension(unit,this,resources.displayMetrics)
+    }
 
 
 }
