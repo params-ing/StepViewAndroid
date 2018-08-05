@@ -36,6 +36,7 @@
         <attr name="drawCount" format="boolean"/>
         <attr name="lineGap" format="dimension"/>
         <attr name="labelTopMargin" format="dimension"/>
+        <attr name="currentStatusZoom" format="float"/>
         <attr name="android:entries" />
     </declare-styleable>
 

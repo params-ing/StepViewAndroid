@@ -3,6 +3,7 @@ package jugnoo.com.learningcustomvviews
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.util.TypedValue
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -15,7 +16,10 @@ class MainActivity : AppCompatActivity() {
 
            statusView.textColorStatus = ContextCompat.getColor(this,android.R.color.holo_red_dark);
            statusView.textSizeStatus =  TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,20.0f,resources.displayMetrics)
+           StatusView(context = this).currentStatusZoom = 1.0f
         }
+
+
 
     }
 }

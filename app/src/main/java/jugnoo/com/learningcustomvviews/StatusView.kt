@@ -3,6 +3,7 @@ package jugnoo.com.learningcustomvviews
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.support.annotation.FloatRange
 import android.support.v4.view.ViewCompat
 import android.text.Layout
 import android.text.StaticLayout
@@ -25,12 +26,12 @@ class StatusView @JvmOverloads constructor(
 
         /*
          TODO
+       current circle validation
        Pass font to textView
-       Ensure Text single line
+       Ensure Text single line & text gap prop
        Text Appearance?
        LTR Support
        Orientation draw vertical too
-       magnify current circle size
        Display status above|bottom
       */
 
@@ -58,6 +59,18 @@ class StatusView @JvmOverloads constructor(
     private lateinit var mTextPaintLabelsIncomplete: TextPaint
     private lateinit var mTextPaintLabelCurrent: TextPaint
     private lateinit var mTextPaintLabels: TextPaint
+
+
+    /**
+     * Magnification value for current Circle
+     */
+    @setparam:FloatRange(from = 0.0, to = 1.0)
+    var  currentStatusZoom:Float = 0.0f
+    set(value) {
+        require(value in 0..1) { "Zoom should be in between 0 to 1, but was $value." }
+
+        currentStatusRadius = circleRadius * (1 + value)
+    }
 
 
 
@@ -312,7 +325,7 @@ class StatusView @JvmOverloads constructor(
      * Stores all the drawing data that is used while drawing on canvas
      */
     private var drawingData = mutableListOf<Item>()
-
+    private var currentStatusRadius:Float by OnLayoutProp(circleRadius);
 
 
 
@@ -372,7 +385,7 @@ class StatusView @JvmOverloads constructor(
             circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete, circleStrokeColor)
 
             circleFillColorCurrent = a.getColor(R.styleable.StatusView_circleColorCurrent, circleFillColorIncomplete)
-            circleStrokeColorCurrent = a.getColor(R.styleable.StatusView_circleStrokeColorCurrent, circleStrokeColorIncomplete)
+            currentStatusZoom = a.getFloat(R.styleable.StatusView_currentStatusZoom, currentStatusZoom)
 
             val entries = a.getTextArray(R.styleable.StatusView_android_entries)
             if (entries != null) {
@@ -492,9 +505,12 @@ class StatusView @JvmOverloads constructor(
 
 
     override fun getSuggestedMinimumWidth(): Int {
-        var extraWidthInCase = setWidthData(lineLength,circleRadius)
+        var extraWidthInCase = setWidthData()
         if(statusCount==1) {
             extraWidthInCase *= 2
+        }
+        if(isShowingCurrentStatus()){
+            extraWidthInCase += (currentStatusRadius-circleRadius)*2;
         }
         return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthInCase).toInt()
     }
@@ -511,6 +527,7 @@ class StatusView @JvmOverloads constructor(
             labelHeight+=labelTopMargin
         }
 
+        val circleRadius =  if(isShowingCurrentStatus()) currentStatusRadius  else circleRadius
         return  (((circleRadius * 2)+circleStrokeWidth) + labelHeight).toInt()
     }
 
@@ -601,6 +618,7 @@ class StatusView @JvmOverloads constructor(
         val lastPoint = PointF()
         lastPoint.x = paddingLeft.toFloat() + (circleStrokeWidth / 2)
         lastPoint.y = paddingTop.toFloat() + (circleRadius + (circleStrokeWidth / 2))
+        if(isShowingCurrentStatus()) lastPoint.y += currentStatusRadius-circleRadius
         for (i in 0 until statusCount) {
 
             var circleStrokePaint: Paint?
@@ -609,13 +627,15 @@ class StatusView @JvmOverloads constructor(
             var linePaint : Paint
             var itemDrawable: Drawable?
 
+            var circleRadius = this.circleRadius
             if(isShowingCurrentStatus() && i==(currentCount-1)){
+                circleRadius = currentStatusRadius
+
                 circleStrokePaint = mCircleStrokePaintCurrent
                 circleFillPaint = mCircleFillPaintCurrent
                 textPaintLabel = mTextPaintLabelCurrent
                 linePaint = mLinePaintCurrent
                 itemDrawable = currentDrawable
-
             }else if (isShowingIncompleteStatus() && i in (currentCount)..statusCount) {
                 circleStrokePaint = mCircleStrokePaintIncomplete
                 circleFillPaint = mCircleFillPaintIncomplete
@@ -636,6 +656,7 @@ class StatusView @JvmOverloads constructor(
             var lineItem: StatusView.LineItem? = null
             var statusItemText: StatusView.LabelItemText? = null
             var labelItemText: StatusView.StatusItemText? = null
+
 
             if(i==0){
                 if(statusData.size>0){
@@ -702,9 +723,11 @@ class StatusView @JvmOverloads constructor(
      * It calculates value using findAdjustWidthForExtremes() as assigning the same width as
      * non-extreme may end up giving extraPadding to the view
      */
-    private fun setWidthData(lineLength: Float, circleRadius: Float):Float {
+    private fun setWidthData():Float {
         var adjacentExtraWidthForView = 0.0f
         for (i in 0 until statusData.size){
+
+            val circleRadius = if(isShowingCurrentStatus() && i==(currentCount-1))currentStatusRadius else circleRadius;
 
             if(i==0 || i==(statusCount-1)){
                 val extraWidth = findAdjustWidthForExtremes(statusData[i].text,lineLength,circleRadius)
