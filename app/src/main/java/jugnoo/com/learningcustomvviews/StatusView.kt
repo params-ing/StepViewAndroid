@@ -45,14 +45,18 @@ class StatusView @JvmOverloads constructor(
      */
     private var mCircleStrokePaint: Paint? = null
     private var mCircleStrokePaintIncomplete: Paint? = null
+    private var mCircleStrokePaintCurrent: Paint? = null
 
     private var mCircleFillPaint: Paint? = null
     private var mCircleFillPaintIncomplete: Paint? = null
+    private var mCircleFillPaintCurrent: Paint? = null
 
     private lateinit var mLinePaint: Paint
     private lateinit var mLinePaintIncomplete: Paint
+    private lateinit var mLinePaintCurrent: Paint
     private lateinit var mTextPaintStatus: TextPaint
     private lateinit var mTextPaintLabelsIncomplete: TextPaint
+    private lateinit var mTextPaintLabelCurrent: TextPaint
     private lateinit var mTextPaintLabels: TextPaint
 
 
@@ -65,7 +69,7 @@ class StatusView @JvmOverloads constructor(
     /*
     The count up to  which status has been completed
     */
-    var completeCount:  Int by OnLayoutProp(INVALID_STATUS_COUNT)
+    var currentCount:  Int by OnLayoutProp(INVALID_STATUS_COUNT)
 
 
     /*
@@ -123,6 +127,13 @@ class StatusView @JvmOverloads constructor(
     }
 
     /**
+     * Color of line adjacent to  circles for current status
+     */
+    var lineColorCurrent: Int by OnValidateProp(Color.BLACK){
+        mLinePaintCurrent.color = lineColorCurrent
+    }
+
+    /**
      * Fill Color of circles for complete statuses
      */
     var circleFillColor: Int by OnValidateProp(Color.CYAN){
@@ -134,6 +145,13 @@ class StatusView @JvmOverloads constructor(
      */
     var circleFillColorIncomplete: Int by OnValidateProp(Color.CYAN){
         mCircleFillPaintIncomplete?.color = circleFillColorIncomplete
+
+    }
+    /**
+     * Fill Color of circles for current status
+     */
+    var circleFillColorCurrent: Int by OnValidateProp(Color.CYAN){
+        mCircleFillPaintCurrent?.color = circleFillColorCurrent
 
     }
     /**
@@ -149,6 +167,13 @@ class StatusView @JvmOverloads constructor(
     var circleStrokeColorIncomplete: Int by OnValidateProp(Color.BLACK){
         mCircleStrokePaintIncomplete?.color = circleStrokeColorIncomplete
     }
+
+    /**
+     * Stroke Color of circles for current Status
+     */
+    var circleStrokeColorCurrent: Int by OnValidateProp(Color.BLACK){
+        mCircleStrokePaintCurrent?.color = circleStrokeColorCurrent
+    }
     /**
      * Text Color of labels
      *
@@ -162,6 +187,13 @@ class StatusView @JvmOverloads constructor(
      */
     var textColorLabelsIncomplete: Int by OnValidateProp(Color.BLACK){
         mTextPaintLabelsIncomplete.color = textColorLabelsIncomplete
+    }
+
+    /**
+     * Text Color of labels  Current
+     */
+    var textColorLabelCurrent : Int by OnValidateProp(Color.BLACK){
+        mTextPaintLabelCurrent.color = textColorLabelCurrent
     }
 
     /**
@@ -208,10 +240,18 @@ class StatusView @JvmOverloads constructor(
     }
 
     /**
+     * A drawable for current Status
+     * #Note: If this is set then it would be given preference over the labels.
+     */
+    var currentDrawable: Drawable? by OnValidateProp(null){
+        setDrawingDimensions()
+    }
+
+    /**
      * A drawable for incomplete statuses
      * #Note: If this is set then it would be given preference over the labels.
      */
-    var inCompleteDrawable: Drawable? by OnValidateProp(null){
+    var incompleteDrawable: Drawable? by OnValidateProp(null){
         setDrawingDimensions()
     }
 
@@ -297,7 +337,7 @@ class StatusView @JvmOverloads constructor(
         try {
 
             statusCount = a.getInt(R.styleable.StatusView_statusCount, statusCount)
-            completeCount = a.getInt(R.styleable.StatusView_completeCount, INVALID_STATUS_COUNT)
+            currentCount = a.getInt(R.styleable.StatusView_currentCount, INVALID_STATUS_COUNT)
 
             circleRadius = a.getDimension(R.styleable.StatusView_circleRadius, circleRadius)
             lineLength = a.getDimension(R.styleable.StatusView_lineLength, lineLength)
@@ -308,7 +348,8 @@ class StatusView @JvmOverloads constructor(
 
 
             completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
-            inCompleteDrawable = a.getDrawable(R.styleable.StatusView_inComplete_drawable)
+            incompleteDrawable = a.getDrawable(R.styleable.StatusView_incomplete_drawable)
+            currentDrawable = a.getDrawable(R.styleable.StatusView_current_drawable)
             drawLabels = a.getBoolean(R.styleable.StatusView_drawCount, drawLabels)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
@@ -323,10 +364,15 @@ class StatusView @JvmOverloads constructor(
             textSizeLabels = a.getDimension(R.styleable.StatusView_textSizeLabels, textSizeLabels)
 
             circleColorType = a.getInteger(R.styleable.StatusView_circleColorType, circleColorType)
-            textColorLabelsIncomplete = a.getColor(R.styleable.StatusView_textColorIncomplete, textColorStatus)
-            lineColorIncomplete = a.getColor(R.styleable.StatusView_lineColorIncomplete, lineColor)
-            circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorInComplete, circleFillColor)
+            textColorLabelsIncomplete = a.getColor(R.styleable.StatusView_textColorLabelsIncomplete, textColorStatus)
+            textColorLabelCurrent = a.getColor(R.styleable.StatusView_textColorLabelsCurrent, textColorLabelCurrent)
+            lineColorIncomplete = a.getColor(R.styleable.StatusView_lineColorIncomplete, lineColorIncomplete)
+            lineColorCurrent= a.getColor(R.styleable.StatusView_lineColorCurrent, lineColorCurrent)
+            circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorIncomplete, circleFillColor)
             circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete, circleStrokeColor)
+
+            circleFillColorCurrent = a.getColor(R.styleable.StatusView_circleColorCurrent, circleFillColorIncomplete)
+            circleStrokeColorCurrent = a.getColor(R.styleable.StatusView_circleStrokeColorCurrent, circleStrokeColorIncomplete)
 
             val entries = a.getTextArray(R.styleable.StatusView_android_entries)
             if (entries != null) {
@@ -363,6 +409,9 @@ class StatusView @JvmOverloads constructor(
         mLinePaintIncomplete = Paint(mLinePaint)
         mLinePaintIncomplete.color = lineColorIncomplete
 
+        mLinePaintCurrent = Paint(mLinePaint)
+        mLinePaintCurrent.color = lineColorCurrent
+
         mTextPaintLabels = TextPaint(mTextPaintStatus)
         mTextPaintLabels.textSize = textSizeLabels
         mTextPaintLabels.color = textColorLabels
@@ -370,6 +419,9 @@ class StatusView @JvmOverloads constructor(
 
         mTextPaintLabelsIncomplete = TextPaint(mTextPaintLabels)
         mTextPaintLabelsIncomplete.color = textColorLabelsIncomplete
+
+        mTextPaintLabelCurrent = TextPaint(mTextPaintLabels)
+        mTextPaintLabelCurrent.color = textColorLabelCurrent
 
 
     }
@@ -391,10 +443,18 @@ class StatusView @JvmOverloads constructor(
                 }
             }
 
+            if(isShowingCurrentStatus()){
+                if (mCircleStrokePaintCurrent == null) {
+                    mCircleStrokePaintCurrent = Paint(mCircleStrokePaint)
+                    mCircleStrokePaintCurrent?.color = circleStrokeColorCurrent
+                }
+            }
+
         } else {
             circleStrokeWidth = 0.0f
             mCircleStrokePaint = null
             mCircleStrokePaintIncomplete = null
+            mCircleStrokePaintCurrent = null
         }
 
         if (containsFlag(circleColorType, CIRCLE_COLOR_TYPE_FILL)) {
@@ -409,14 +469,26 @@ class StatusView @JvmOverloads constructor(
                     mCircleFillPaintIncomplete?.color = circleFillColorIncomplete
                 }
             }
+
+            if(isShowingCurrentStatus()){
+                if (mCircleFillPaintCurrent == null) {
+                    mCircleFillPaintCurrent = Paint(mCircleFillPaint)
+                    mCircleFillPaintCurrent?.color = circleFillColorCurrent
+                }
+            }
         } else {
             mCircleFillPaint = null
+            mCircleFillPaintIncomplete =null
+            mCircleFillPaintCurrent=null
         }
     }
 
 
     private fun isShowingIncompleteStatus() =
-            completeCount != INVALID_STATUS_COUNT && completeCount < statusCount
+            currentCount > INVALID_STATUS_COUNT && currentCount < statusCount
+
+    private fun isShowingCurrentStatus()=
+            currentCount > INVALID_STATUS_COUNT && currentCount <= statusCount
 
 
     override fun getSuggestedMinimumWidth(): Int {
@@ -528,18 +600,33 @@ class StatusView @JvmOverloads constructor(
         lastPoint.y = paddingTop.toFloat() + (circleRadius + (circleStrokeWidth / 2))
         for (i in 0 until statusCount) {
 
-            var circleStrokePaint = this.mCircleStrokePaint
-            var circleFillPaint = this.mCircleFillPaint
-            var textPaintLabel = this.mTextPaintLabels
-            var linePaint = this.mLinePaint
-            var itemDrawable: Drawable? = completeDrawable
-            if (completeCount in (0)..i) {
+            var circleStrokePaint: Paint?
+            var circleFillPaint : Paint?
+            var textPaintLabel : TextPaint
+            var linePaint : Paint
+            var itemDrawable: Drawable?
+
+            if(isShowingCurrentStatus() && i==(currentCount-1)){
+                circleStrokePaint = mCircleStrokePaintCurrent
+                circleFillPaint = mCircleFillPaintCurrent
+                textPaintLabel = mTextPaintLabelCurrent
+                linePaint = mLinePaintCurrent
+                itemDrawable = currentDrawable
+
+            }else if (isShowingIncompleteStatus() && i in (currentCount)..statusCount) {
                 circleStrokePaint = mCircleStrokePaintIncomplete
                 circleFillPaint = mCircleFillPaintIncomplete
                 textPaintLabel = mTextPaintLabelsIncomplete
                 linePaint = mLinePaintIncomplete
-                itemDrawable = inCompleteDrawable
+                itemDrawable = incompleteDrawable
 
+            }else{
+
+                 circleStrokePaint = this.mCircleStrokePaint
+                 circleFillPaint = this.mCircleFillPaint
+                 textPaintLabel = this.mTextPaintLabels
+                 linePaint = this.mLinePaint
+                 itemDrawable = completeDrawable
             }
 
 

@@ -12,6 +12,8 @@
         android:layout_height="wrap_content"
         android:entries="@array/statuses"
         app:circleColorType="fillStroke"
+        app:currentCount="2"
+        app:current_drawable="@drawable/ic_tag_faces_black_24dp"
         app:layout_constraintVertical_bias="0.5"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintBottom_toBottomOf="parent"
