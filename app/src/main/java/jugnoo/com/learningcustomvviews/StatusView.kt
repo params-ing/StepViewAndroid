@@ -507,8 +507,11 @@ class StatusView @JvmOverloads constructor(
         for(item in statusData){
             labelHeight = Math.max(labelHeight,setLabelsHeight(mTextPaintStatus,item))
         }
+        if(statusData.size>0){
+            labelHeight+=labelTopMargin
+        }
 
-        return  (((circleRadius * 2)+circleStrokeWidth) + labelHeight + labelTopMargin).toInt()
+        return  (((circleRadius * 2)+circleStrokeWidth) + labelHeight).toInt()
     }
 
 
