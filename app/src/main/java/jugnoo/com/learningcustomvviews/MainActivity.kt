@@ -14,9 +14,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         btn.setOnClickListener{
 
-           statusView.textColorStatus = ContextCompat.getColor(this,android.R.color.holo_red_dark);
-           statusView.textSizeStatus =  TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,20.0f,resources.displayMetrics)
-           StatusView(context = this).currentStatusZoom = 1.0f
+//            statusView.textColorStatus = ContextCompat.getColor(this,android.R.color.holo_red_dark);
+            statusView.textSizeStatus =  TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,20.0f,resources.displayMetrics)
         }
 
 
