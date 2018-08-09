@@ -34,6 +34,7 @@
         <attr name="current_drawable" format="reference"/>
         <attr name="incomplete_drawable" format="reference"/>
         <attr name="drawCount" format="boolean"/>
+        <attr name="obeyLineLength" format="boolean"/>
         <attr name="lineGap" format="dimension"/>
         <attr name="labelTopMargin" format="dimension"/>
         <attr name="currentStatusZoom" format="float"/>

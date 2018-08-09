@@ -72,6 +72,16 @@ class StatusView @JvmOverloads constructor(
     }
 
 
+    /**
+     *  Set true to obey Status Text i.e alphabets or words belonging to one line would not cross
+     *  to the other line so the line length between circles would be increased as per if needed.
+     *
+     *  Set false to strictly obey line length.
+     *
+     *
+     */
+    var obeyLineLength: Boolean by OnLayoutProp(false)
+
 
     /**
     * The total number of statuses to be displayed
@@ -286,6 +296,7 @@ class StatusView @JvmOverloads constructor(
             if((oldHadStrokeFlagSet && !newHasStrokeFlagSet) || (!oldHadStrokeFlagSet && newHasStrokeFlagSet))
             {
                 requestLayout()
+
             }else{
                 setDrawingDimensions()
                 invalidate()
@@ -363,6 +374,7 @@ class StatusView @JvmOverloads constructor(
             incompleteDrawable = a.getDrawable(R.styleable.StatusView_incomplete_drawable)
             currentDrawable = a.getDrawable(R.styleable.StatusView_current_drawable)
             drawLabels = a.getBoolean(R.styleable.StatusView_drawCount, drawLabels)
+            obeyLineLength = a.getBoolean(R.styleable.StatusView_obeyLineLength, obeyLineLength)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
 
@@ -506,10 +518,10 @@ class StatusView @JvmOverloads constructor(
     override fun getSuggestedMinimumWidth(): Int {
 
 
-        var extraWidth =  if(true){
-            setWidthDataForObeyingStatusText()
-        }else{
+        var extraWidth =  if(obeyLineLength){
             setWidthDataForObeyingLineLength()
+        }else{
+            setWidthDataForObeyingStatusText()
         }
 
         if(isShowingCurrentStatus()){
