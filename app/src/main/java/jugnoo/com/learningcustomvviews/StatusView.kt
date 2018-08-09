@@ -11,7 +11,6 @@ import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
-import java.lang.IllegalStateException
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -507,67 +506,51 @@ class StatusView @JvmOverloads constructor(
     override fun getSuggestedMinimumWidth(): Int {
 
         var extraWidthInCase = 0.0f
-        if(true){
-            val widestLineData:WidestLineData = getWidestLineData(statusData.map { it.text },mTextPaintStatus)
+        if(false){
 
-            if(isShowingCurrentStatus() && widestLineData.widestLineOverall.pos==(currentCount-1)){
+            val widestLineData:StatusTextWidthInfo = getStatusTextWidthInfo(statusData.map { it.text },mTextPaintStatus)
 
+            lineLength += widestLineData.widestStatus.width - minStatusWidth(widestLineData.widestStatus.pos)
 
-                if (widestLineData.widestLineOverall.width > minStatusWidth(currentCount)) {
+            widestLineData.subordinateWidestStatus?.run {
+                val minStatusWidth = minStatusWidth(pos)
 
-                    lineLength += (widestLineData.widestLineOverall.width - minStatusWidth(currentCount))
-
+                if (width > minStatusWidth) {
+                    lineLength += width - minStatusWidth
                 }
-
-                    widestLineData.secondaryWidestLineOverall?.run {
-                        if(this.width>minStatusWidth(this.pos+1)){
-                            lineLength += (this.width - minStatusWidth(this.pos+1))
-                        }
-                    }
-
-
-            } else if(widestLineData.widestLineOverall.width>minStatusWidth()){
-
-                lineLength+=(widestLineData.widestLineOverall.width-minStatusWidth())
             }
 
 
-
-            for (i in 0 until statusData.size) {
-                val item = statusData[i]
-                when (i) {
+            for (pos in 0 until statusData.size) {
+                val item = statusData[pos]
+                when (pos) {
                     0, (statusCount - 1) -> {
-                        item.width = if(i==0)widestLineData.widestLineExtremeLeft else widestLineData.widestLineExtremeRight
 
-                        if(item.width>minStatusWidthExtremes(i+1)){
+                        item.width = if (pos == 0) {
+                            widestLineData.extremeLeftStatusWidth
+                        } else {
+                            widestLineData.extremeRightStatusWidth
+                        }
 
-                          if(item.width==minStatusWidth(i+1)){//?
-                              extraWidthInCase+= lineLength/2+lineGap
-                          }else{
-                              extraWidthInCase+= (item.width-minStatusWidthExtremes(i+1))/2
-                          }
+                        val extraExtremesWidth = (item.width - minStatusWidthExtremes(pos)) / 2
 
-
-
+                        if (extraExtremesWidth > 0) {
+                            extraWidthInCase += extraExtremesWidth
                         }
 
                     }
-                    else -> item.width = widestLineData.widestLineOverall.width
+                    else -> item.width = widestLineData.widestStatus.width
                 }
 
             }
 
-            if(statusCount==1) {
-                extraWidthInCase *= 2
-            }
+
 
 
 
         }else{
-             setWidthData()
-            if(statusCount==1) {
-                extraWidthInCase *= 2
-            }
+             extraWidthInCase+= setWidthData()
+
 
         }
 
@@ -576,32 +559,33 @@ class StatusView @JvmOverloads constructor(
             extraWidthInCase += (currentStatusRadius-circleRadius)*2;
         }
 
+        if(statusCount==1) {
+            extraWidthInCase *= 2
+        }
 
         return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthInCase).toInt()
     }
 
-    private fun minStatusWidth(count:Int=-1): Float {
+
+    private fun minStatusWidth(pos:Int): Float {
 
         var circleRadius = this.circleRadius
-        var lineWidth = (lineLength + lineGap*2)
+        val lineWidth = (lineLength + lineGap*2)
 
-        if(isShowingCurrentStatus() && count==(currentCount)){
+        if(isShowingCurrentStatus() && pos==currentCountIndex()){
             circleRadius = currentStatusRadius
-        }/*
-
-        if(count== 1 || (statusData.size==statusCount && count==statusCount)){
-            lineWidth = 0.0f
-        }*/
+        }
 
         return  (2 * circleRadius + circleStrokeWidth) + lineWidth;
     }
 
-    private fun minStatusWidthExtremes(count:Int = -1): Float {
-        var circleRadius = this.circleRadius;
-        if(isShowingCurrentStatus() && count==(currentCount)){
+    private fun minStatusWidthExtremes(pos:Int): Float {
+        var circleRadius = this.circleRadius
+
+        if(isShowingCurrentStatus() && pos==currentCountIndex()){
             circleRadius = currentStatusRadius
         }
-        return (2 * circleRadius + circleStrokeWidth);
+        return (2 * circleRadius + circleStrokeWidth)
     }
 
 
@@ -934,11 +918,55 @@ class StatusView @JvmOverloads constructor(
     }
 
 
-    class WidestLineData(var widestLineOverall:WidestLineInfo,  var secondaryWidestLineOverall:WidestLineInfo?=null,
-                         var widestLineExtremeLeft:Float=0.0f, var widestLineExtremeRight:Float=0.0f)
+    class StatusTextWidthInfo(var widestStatus:StatusWidth, var subordinateWidestStatus:StatusWidth?=null,
+                              var extremeLeftStatusWidth:Float=0.0f, var extremeRightStatusWidth:Float=0.0f)
 
-    class WidestLineInfo(var width: Float = 0.0f,var pos:Int=-1)
-    private fun getWidestLineData(text:String, paint: TextPaint):Float{
+    class StatusWidth(var width: Float = 0.0f, var pos:Int=-1)
+
+    private fun getStatusTextWidthInfo(list:List<String>, paint:TextPaint):StatusTextWidthInfo{
+
+        val widestStatus = StatusWidth()
+        var subordinateWidestStatus: StatusWidth? = null
+        val statusWidthInfo = StatusTextWidthInfo(widestStatus)
+
+
+        for (pos in 0 until list.size) {
+
+            val result = getStatusWidth(list[pos], paint)
+
+            if (isShowingCurrentStatus() && pos == (currentCountIndex()) && result > widestStatus.width) {
+
+                subordinateWidestStatus = StatusWidth(widestStatus.width, widestStatus.pos)
+                widestStatus.width = result
+                widestStatus.pos = pos
+
+            } else if (result > widestStatus.width) {
+
+                widestStatus.width = result
+                widestStatus.pos = pos
+                subordinateWidestStatus = null
+
+            } else if (subordinateWidestStatus != null && result > subordinateWidestStatus.width) {
+
+                subordinateWidestStatus.width = result
+                subordinateWidestStatus.pos = pos
+            }
+
+            when (pos) {
+                0 -> statusWidthInfo.extremeLeftStatusWidth= result
+                statusCountIndex() -> statusWidthInfo.extremeRightStatusWidth = result
+            }
+
+        }
+
+        statusWidthInfo.widestStatus = widestStatus
+        statusWidthInfo.subordinateWidestStatus = subordinateWidestStatus
+
+        return statusWidthInfo;
+
+    }
+
+    private fun getStatusWidth(text:String, paint: TextPaint):Float{
 
         val arr:List<String> = text.split('\n')
         var result = 0.0f
@@ -952,47 +980,7 @@ class StatusView @JvmOverloads constructor(
 
     }
 
-    private fun getWidestLineData(list:List<String>, paint:TextPaint):WidestLineData{
-
-        val widestLineOverall=  WidestLineInfo()
-        val widestLineData=WidestLineData(widestLineOverall)
-
-
-        var secondaryWidestLineOverall:WidestLineInfo? = null
-
-        for(i in 0 until list.size){
-
-            val result =  getWidestLineData(list[i],paint)
-            if(isShowingCurrentStatus() && i==(currentCount-1) && result>widestLineOverall.width){
-
-                secondaryWidestLineOverall = WidestLineInfo(widestLineOverall.width,widestLineOverall.pos)
-                widestLineOverall.width = result
-                widestLineOverall.pos = i
-
-            }else if(result>widestLineOverall.width){
-
-                widestLineOverall.width = result
-                widestLineOverall.pos = i
-                secondaryWidestLineOverall=null
-
-            }else if(secondaryWidestLineOverall!=null && result>secondaryWidestLineOverall.width){
-                secondaryWidestLineOverall.width = result
-                secondaryWidestLineOverall.pos  = i
-            }
-
-            if(i==0){
-                widestLineData.widestLineExtremeLeft =result
-            }
-
-            if(i==(statusCount-1))
-                widestLineData.widestLineExtremeRight = result
-            }
-
-        widestLineData.widestLineOverall = widestLineOverall
-        widestLineData.secondaryWidestLineOverall = secondaryWidestLineOverall
-
-        return widestLineData;
-
-    }
+    private fun currentCountIndex() = currentCount-1
+    private fun statusCountIndex() = statusCount-1
 
 }
