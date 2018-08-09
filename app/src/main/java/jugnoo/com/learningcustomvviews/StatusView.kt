@@ -500,93 +500,31 @@ class StatusView @JvmOverloads constructor(
             currentCount > INVALID_STATUS_COUNT && currentCount < statusCount
 
     private fun isShowingCurrentStatus()=
-            currentCount > 0 && currentCount <= statusCount
+            currentCount in 1..statusCount
 
 
     override fun getSuggestedMinimumWidth(): Int {
 
-        var extraWidthInCase = 0.0f
-        if(false){
 
-            val widestLineData:StatusTextWidthInfo = getStatusTextWidthInfo(statusData.map { it.text },mTextPaintStatus)
-
-            lineLength += widestLineData.widestStatus.width - minStatusWidth(widestLineData.widestStatus.pos)
-
-            widestLineData.subordinateWidestStatus?.run {
-                val minStatusWidth = minStatusWidth(pos)
-
-                if (width > minStatusWidth) {
-                    lineLength += width - minStatusWidth
-                }
-            }
-
-
-            for (pos in 0 until statusData.size) {
-                val item = statusData[pos]
-                when (pos) {
-                    0, (statusCount - 1) -> {
-
-                        item.width = if (pos == 0) {
-                            widestLineData.extremeLeftStatusWidth
-                        } else {
-                            widestLineData.extremeRightStatusWidth
-                        }
-
-                        val extraExtremesWidth = (item.width - minStatusWidthExtremes(pos)) / 2
-
-                        if (extraExtremesWidth > 0) {
-                            extraWidthInCase += extraExtremesWidth
-                        }
-
-                    }
-                    else -> item.width = widestLineData.widestStatus.width
-                }
-
-            }
-
-
-
-
-
+        var extraWidth =  if(true){
+            setWidthDataForObeyingStatusText()
         }else{
-             extraWidthInCase+= setWidthData()
-
-
+            setWidthDataForObeyingLineLength()
         }
-
 
         if(isShowingCurrentStatus()){
-            extraWidthInCase += (currentStatusRadius-circleRadius)*2;
+            extraWidth += (currentStatusRadius-circleRadius)*2;
         }
+
 
         if(statusCount==1) {
-            extraWidthInCase *= 2
+            extraWidth *= 2
         }
 
-        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidthInCase).toInt()
+        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidth).toInt()
     }
 
 
-    private fun minStatusWidth(pos:Int): Float {
-
-        var circleRadius = this.circleRadius
-        val lineWidth = (lineLength + lineGap*2)
-
-        if(isShowingCurrentStatus() && pos==currentCountIndex()){
-            circleRadius = currentStatusRadius
-        }
-
-        return  (2 * circleRadius + circleStrokeWidth) + lineWidth;
-    }
-
-    private fun minStatusWidthExtremes(pos:Int): Float {
-        var circleRadius = this.circleRadius
-
-        if(isShowingCurrentStatus() && pos==currentCountIndex()){
-            circleRadius = currentStatusRadius
-        }
-        return (2 * circleRadius + circleStrokeWidth)
-    }
 
 
     override fun getSuggestedMinimumHeight(): Int {
@@ -702,7 +640,6 @@ class StatusView @JvmOverloads constructor(
             var circleRadius = this.circleRadius
             if(isShowingCurrentStatus() && i==(currentCount-1)){
                 circleRadius = currentStatusRadius
-
                 circleStrokePaint = mCircleStrokePaintCurrent
                 circleFillPaint = mCircleFillPaintCurrent
                 textPaintLabel = mTextPaintLabelCurrent
@@ -776,15 +713,6 @@ class StatusView @JvmOverloads constructor(
 
 
     /**
-     * checks if a flagSet contains a flag
-     *
-     */
-
-    private fun containsFlag(flagSet: Int, flag: Int): Boolean {
-        return flagSet or flag == flagSet
-    }
-
-    /**
      * @param lineLength lineLength of StatusView
      * @param circleRadius circleRadius Of StatusView
      *
@@ -795,47 +723,98 @@ class StatusView @JvmOverloads constructor(
      * It calculates value using findAdjustWidthForExtremes() as assigning the same width as
      * non-extreme may end up giving extraPadding to the view
      */
-    private fun setWidthData():Float {
+    private fun setWidthDataForObeyingLineLength():Float {
         var adjacentExtraWidthForView = 0.0f
-        for (i in 0 until statusData.size){
 
-            val circleRadius = if(isShowingCurrentStatus() && i==(currentCount-1))currentStatusRadius else circleRadius;
+        for (pos in 0 until statusData.size){
 
-            if(i==0 || i==(statusCount-1)){
-                val extraWidth = findAdjustWidthForExtremes(statusData[i].text,lineLength,circleRadius)
-                adjacentExtraWidthForView+=extraWidth
-                val minWidthForExtreme = (2 * circleRadius + circleStrokeWidth)
-                if(extraWidth>0){
-                    statusData[i].width = minWidthForExtreme + 2 * extraWidth
+            val item = statusData[pos]
+            when (pos) {
+                0, statusCount - 1 -> {
 
-                }else{
-                    statusData[i].width = minWidthForExtreme
+                    val minStatusWidthExtremes = minStatusWidthExtremes(pos)
+                    val minStatusWidth = minStatusWidth(pos)
+                    val statusWidth = getTextWidth(mTextPaintStatus, item.text)
+                    var extraExtremeWidth = 0.0f
+
+                    if (statusWidth > minStatusWidthExtremes) {
+                        extraExtremeWidth = Math.min(minStatusWidth - minStatusWidthExtremes, statusWidth - minStatusWidthExtremes) / 2
+                    }
+
+                    item.width = minStatusWidthExtremes + 2 * extraExtremeWidth
+                    adjacentExtraWidthForView += extraExtremeWidth
+
+
                 }
-            }else{
-                statusData[i].width = (lineLength + lineGap*2) + (2 * circleRadius + circleStrokeWidth)
+                else -> item.width = minStatusWidth(pos)
+
             }
         }
         return adjacentExtraWidthForView
     }
 
-    /**
-     * @param text Status text
-     * @param lineLength lineLength of StatusView
-     * @param circleRadius circleRadius Of StatusView
-     * @return Returns max width that an extreme label would need besides the circle Width
-     *  The return value does not exceed half the linelength on each side, since it would affect the symmetry.
-     *  i.e circleWidth < return value > linelength
-     */
-    private fun findAdjustWidthForExtremes(text: String, lineLength: Float, circleRadius: Float):Float {
-        val totalWidth = getTextWidth(mTextPaintStatus, text)
-        val actualWidth = (2*(circleRadius + circleStrokeWidth/2))
-        val extraWidth = Math.max(totalWidth, actualWidth)
-        return if(extraWidth==totalWidth){
-            Math.min((lineLength + lineGap*2),(totalWidth-actualWidth))/2
-        }else{
-            0.0f
+
+    private fun setWidthDataForObeyingStatusText(): Float {
+        var extraWidth = 0.0f
+
+        val widestLineData: StatusTextWidthInfo = getStatusTextWidthInfo(statusData.map { it.text }, mTextPaintStatus)
+
+        lineLength += widestLineData.widestStatus.width - minStatusWidth(widestLineData.widestStatus.pos)
+
+        widestLineData.subordinateWidestStatus?.run {
+            val minStatusWidth = minStatusWidth(pos)
+
+            if (width > minStatusWidth) {
+                lineLength += width - minStatusWidth
+            }
         }
 
+
+        for (pos in 0 until statusData.size) {
+            val item = statusData[pos]
+            when (pos) {
+                0, (statusCount - 1) -> {
+
+                    item.width = if (pos == 0) {
+                        widestLineData.extremeLeftStatusWidth
+                    } else {
+                        widestLineData.extremeRightStatusWidth
+                    }
+
+                    val extraExtremesWidth = (item.width - minStatusWidthExtremes(pos)) / 2
+
+                    if (extraExtremesWidth > 0) {
+                        extraWidth += extraExtremesWidth
+                    }
+
+                }
+                else -> item.width = widestLineData.widestStatus.width
+            }
+
+        }
+        return extraWidth
+    }
+
+
+    private fun minStatusWidth(pos:Int): Float {
+
+        var circleRadius = this.circleRadius
+        val lineWidth = (lineLength + lineGap*2)
+
+        if(isShowingCurrentStatus() && pos==currentCountIndex()){
+            circleRadius = currentStatusRadius
+        }
+
+        return  (2 * circleRadius + circleStrokeWidth) + lineWidth;
+    }
+
+    private fun minStatusWidthExtremes(pos:Int): Float {
+        var circleRadius = this.circleRadius
+
+        if(isShowingCurrentStatus() && pos==currentCountIndex()){
+            circleRadius = currentStatusRadius
+        }
+        return (2 * circleRadius + circleStrokeWidth)
     }
 
     /**
@@ -851,7 +830,7 @@ class StatusView @JvmOverloads constructor(
      * @param labelInfo LabelInfo which contains width and text
      * @return Height that the label would require
      */
-     private fun  setLabelsHeight(textPaint:TextPaint, labelInfo: StatusInfo):Float{
+     private fun setLabelsHeight(textPaint:TextPaint, labelInfo: StatusInfo):Float{
         val staticLayoutHeight = getStaticLayout(labelInfo.text, textPaint, labelInfo.width)
         labelInfo.staticLayout = staticLayoutHeight
          labelInfo.height = staticLayoutHeight.height.toFloat()
@@ -871,50 +850,6 @@ class StatusView @JvmOverloads constructor(
         val spacingAddition = 0f
         val includePadding = false
         return StaticLayout(text, textPaint, width.toInt(), alignment, spacingMultiplier, spacingAddition, includePadding)
-    }
-
-
-    /**
-     * Delegate property used to requestLayout if any value changed
-     */
-    inner class OnLayoutProp<T> (private var field:T, private inline var func:()->Unit={}){
-        operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
-            field = v
-            if(ViewCompat.isLaidOut(this@StatusView)){
-                drawingData.clear()
-                func()
-                requestLayout()
-
-            }
-
-        }
-        operator fun getValue(thisRef: Any?,p: KProperty<*>):T{
-            return field
-        }
-
-    }
-
-    /**
-     * Delegate Property used to invalidate a layout after executing a custom function
-     */
-    inner class  OnValidateProp<T> (private var field:T, private inline var func:()->Unit={}){
-        operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
-            field = v
-            if(ViewCompat.isLaidOut(this@StatusView)){
-                func()
-                invalidate()
-
-            }
-
-        }
-        operator fun getValue(thisRef: Any?,p: KProperty<*>):T{
-            return field
-        }
-
-    }
-
-    private fun Float.pxValue(unit:Int = TypedValue.COMPLEX_UNIT_DIP):Float{
-        return TypedValue.applyDimension(unit,this,resources.displayMetrics)
     }
 
 
@@ -962,7 +897,7 @@ class StatusView @JvmOverloads constructor(
         statusWidthInfo.widestStatus = widestStatus
         statusWidthInfo.subordinateWidestStatus = subordinateWidestStatus
 
-        return statusWidthInfo;
+        return statusWidthInfo
 
     }
 
@@ -980,7 +915,64 @@ class StatusView @JvmOverloads constructor(
 
     }
 
+
+    /**
+     * checks if a flagSet contains a flag
+     *
+     */
+
+    private fun containsFlag(flagSet: Int, flag: Int): Boolean {
+        return flagSet or flag == flagSet
+    }
+
+
     private fun currentCountIndex() = currentCount-1
+
     private fun statusCountIndex() = statusCount-1
+
+
+    /**
+     * Delegate property used to requestLayout if any value changed
+     */
+    inner class OnLayoutProp<T> (private var field:T, private inline var func:()->Unit={}){
+        operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
+            field = v
+            if(ViewCompat.isLaidOut(this@StatusView)){
+                drawingData.clear()
+                func()
+                requestLayout()
+
+            }
+
+        }
+        operator fun getValue(thisRef: Any?,p: KProperty<*>):T{
+            return field
+        }
+
+    }
+
+    /**
+     * Delegate Property used to invalidate a layout after executing a custom function
+     */
+    inner class  OnValidateProp<T> (private var field:T, private inline var func:()->Unit={}){
+        operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
+            field = v
+            if(ViewCompat.isLaidOut(this@StatusView)){
+                func()
+                invalidate()
+
+            }
+
+        }
+        operator fun getValue(thisRef: Any?,p: KProperty<*>):T{
+            return field
+        }
+
+    }
+
+    private fun Float.pxValue(unit:Int = TypedValue.COMPLEX_UNIT_DIP):Float{
+        return TypedValue.applyDimension(unit,this,resources.displayMetrics)
+    }
+
 
 }
