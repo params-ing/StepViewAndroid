@@ -28,9 +28,8 @@
             app:obeyLineLength="false"
             app:currentStatusZoom="0.5"
             app:drawCount="true"
-            app:statusFont="@font/bree_serif"
-            app:labelFont="@font/pt_sans"
-            app:textSize="15sp"
+            app:statusFont="@font/montserrat_r"
+            app:labelFont="@font/roboto_r"
             android:entries="@array/statuses"
             app:current_drawable="@drawable/ic_tag_faces_black_24dp" />
     </HorizontalScrollView>
