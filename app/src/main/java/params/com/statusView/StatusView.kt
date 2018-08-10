@@ -1,4 +1,4 @@
-package jugnoo.com.learningcustomvviews
+package params.com.statusView
 
 import android.content.Context
 import android.graphics.*
