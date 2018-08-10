@@ -3,8 +3,8 @@
     <string name="customViewLabel">Fan Control</string>
 
     <string-array name="statuses">
-        <item>pamewqeqwe</item>
-        <item>pamewqeqwe</item>
-        <item>pamDewqe</item>
+        <item>On the way</item>
+        <item>Arriving</item>
+        <item>Delivered</item>
     </string-array>
 </resources>

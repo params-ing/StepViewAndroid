@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.support.annotation.FloatRange
+import android.support.v4.content.res.ResourcesCompat
 import android.support.v4.view.ViewCompat
 import android.text.Layout
 import android.text.StaticLayout
@@ -251,6 +252,30 @@ class StatusView @JvmOverloads constructor(
     }
 
     /**
+     * Text Font of statuses
+     */
+
+    var statusTypeface:Typeface? by OnLayoutProp(null){
+        statusTypeface?.run {
+            mTextPaintStatus.typeface = this
+        }
+
+    }
+
+    /**
+     * Text Font of Labels
+     */
+
+    var labelsTypeface:Typeface? by OnLayoutProp(null){
+        labelsTypeface?.run {
+            mTextPaintLabels.typeface = this
+            mTextPaintLabelsIncomplete.typeface = this
+            mTextPaintLabelCurrent.typeface = this
+        }
+
+    }
+
+    /**
      *  A boolean which decides if to draw labels or not
      */
 
@@ -412,6 +437,24 @@ class StatusView @JvmOverloads constructor(
                 }
             }
 
+            try {
+                val resource: Int = a.getResourceId(R.styleable.StatusView_statusFont, -1)
+                if (resource != -1) {
+                    statusTypeface = ResourcesCompat.getFont(getContext(), resource)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            try {
+                val resource: Int = a.getResourceId(R.styleable.StatusView_labelFont, -1)
+                if (resource != -1) {
+                    labelsTypeface = ResourcesCompat.getFont(getContext(), resource)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
 
         } finally {
             a.recycle()
@@ -434,8 +477,9 @@ class StatusView @JvmOverloads constructor(
         mTextPaintStatus.textAlign = Paint.Align.CENTER
         mTextPaintStatus.color = textColorStatus
         mTextPaintStatus.textSize = textSizeStatus
-
-
+        statusTypeface?.run {
+            mTextPaintStatus.typeface = this
+        }
 
         mLinePaintIncomplete = Paint(mLinePaint)
         mLinePaintIncomplete.color = lineColorIncomplete
@@ -443,7 +487,9 @@ class StatusView @JvmOverloads constructor(
         mLinePaintCurrent = Paint(mLinePaint)
         mLinePaintCurrent.color = lineColorCurrent
 
-        mTextPaintLabels = TextPaint(mTextPaintStatus)
+        mTextPaintLabels = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        mTextPaintLabels.style = Paint.Style.FILL
+        mTextPaintLabels.textAlign = Paint.Align.CENTER
         mTextPaintLabels.textSize = textSizeLabels
         mTextPaintLabels.color = textColorLabels
 
@@ -453,6 +499,13 @@ class StatusView @JvmOverloads constructor(
 
         mTextPaintLabelCurrent = TextPaint(mTextPaintLabels)
         mTextPaintLabelCurrent.color = textColorLabelCurrent
+
+        labelsTypeface?.run {
+            mTextPaintLabels.typeface = this
+            mTextPaintLabelsIncomplete.typeface = this
+            mTextPaintLabelCurrent.typeface = this
+        }
+
 
 
     }
@@ -533,7 +586,7 @@ class StatusView @JvmOverloads constructor(
         }
 
         if(isShowingCurrentStatus()){
-            extraWidth += (currentStatusRadius-circleRadius)*2;
+            extraWidth += (currentStatusRadius-circleRadius)*2
         }
 
 
@@ -838,7 +891,7 @@ class StatusView @JvmOverloads constructor(
             circleRadius = currentStatusRadius
         }
 
-        return  (2 * circleRadius + circleStrokeWidth) + lineWidth;
+        return  (2 * circleRadius + circleStrokeWidth) + lineWidth
     }
 
     private fun minStatusWidthExtremes(pos:Int): Float {
