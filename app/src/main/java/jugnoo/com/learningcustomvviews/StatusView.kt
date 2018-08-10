@@ -26,14 +26,12 @@ class StatusView @JvmOverloads constructor(
 
         /*
          TODO
-       alignAllStatusWithCurrent
-       Pass font to textView
-       Ensure Text single line & text gap prop
+       Display status above|bottom
        Text Appearance?
        LTR Support
        Orientation draw vertical too
-       Display status above|bottom
-      */
+
+     */
 
     companion object {
         const val CIRCLE_COLOR_TYPE_FILL = 1
@@ -131,6 +129,14 @@ class StatusView @JvmOverloads constructor(
      * Top Margin of Labels from circle
      */
      var labelTopMargin by OnLayoutProp( 4.0f.pxValue())
+
+    /**
+     *  set true to align all status to align same as current Status y-pos
+     *
+     */
+     var alignStatusWithCurrent by OnValidateProp(false){
+        setDrawingDimensions()
+    }
 
     /**
      * Stroke width of the line between circles (dp)
@@ -429,6 +435,7 @@ class StatusView @JvmOverloads constructor(
 
             circleFillColorCurrent = a.getColor(R.styleable.StatusView_circleColorCurrent, circleFillColorIncomplete)
             currentStatusZoom = a.getFloat(R.styleable.StatusView_currentStatusZoom, currentStatusZoom)
+            alignStatusWithCurrent = a.getBoolean(R.styleable.StatusView_alignStatusWithCurrent, alignStatusWithCurrent)
 
             val entries = a.getTextArray(R.styleable.StatusView_android_entries)
             if (entries != null) {
@@ -756,7 +763,8 @@ class StatusView @JvmOverloads constructor(
             lastPoint.x += ((circleRadius) * 2.0f) + (circleStrokeWidth / 2)
 
             if(i<statusData.size){
-                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + circleRadius + circleStrokeWidth/2 + labelTopMargin, statusData[i].staticLayout)
+                val radii = if(isShowingCurrentStatus() && alignStatusWithCurrent) currentStatusRadius else circleRadius
+                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + labelTopMargin, statusData[i].staticLayout)
             }
 
 

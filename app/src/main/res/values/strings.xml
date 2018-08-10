@@ -3,7 +3,8 @@
     <string name="customViewLabel">Fan Control</string>
 
     <string-array name="statuses">
-        <item>On the way</item>
+        <item>Confirmed</item>
+        <item>Dispatched</item>
         <item>Arriving</item>
         <item>Delivered</item>
     </string-array>

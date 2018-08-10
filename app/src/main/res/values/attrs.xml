@@ -39,6 +39,7 @@
         <attr name="minStatusMargin" format="dimension"/>
         <attr name="labelTopMargin" format="dimension"/>
         <attr name="currentStatusZoom" format="float"/>
+        <attr name="alignStatusWithCurrent" format="boolean"/>
         <attr name="statusFont" format="reference"/>
         <attr name="labelFont" format="reference"/>
         <attr name="android:entries" />
