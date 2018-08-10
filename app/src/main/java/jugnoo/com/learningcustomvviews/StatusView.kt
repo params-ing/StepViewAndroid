@@ -71,6 +71,11 @@ class StatusView @JvmOverloads constructor(
         currentStatusRadius = circleRadius * (1 + value)
     }
 
+    /**
+     *  A min margin that there should be between every adjacent status Text
+     *  Note# This only applies if obeyLineLength is set to false
+     */
+    var minMarginStatusText: Float by OnLayoutProp(10.0f.pxValue())
 
     /**
      *  Set true to obey Status Text i.e alphabets or words belonging to one line would not cross
@@ -335,7 +340,8 @@ class StatusView @JvmOverloads constructor(
      * Stores all the drawing data that is used while drawing on canvas
      */
     private var drawingData = mutableListOf<Item>()
-    private var currentStatusRadius:Float by OnLayoutProp(circleRadius);
+    private var currentStatusRadius:Float by OnLayoutProp(circleRadius)
+    private var lineLengthComputed = 0.0f
 
 
 
@@ -376,6 +382,7 @@ class StatusView @JvmOverloads constructor(
             drawLabels = a.getBoolean(R.styleable.StatusView_drawCount, drawLabels)
             obeyLineLength = a.getBoolean(R.styleable.StatusView_obeyLineLength, obeyLineLength)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
+            minMarginStatusText = a.getDimension(R.styleable.StatusView_minMarginStatus, minMarginStatusText)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
 
 
@@ -518,6 +525,7 @@ class StatusView @JvmOverloads constructor(
     override fun getSuggestedMinimumWidth(): Int {
 
 
+        lineLengthComputed = lineLength
         var extraWidth =  if(obeyLineLength){
             setWidthDataForObeyingLineLength()
         }else{
@@ -533,7 +541,7 @@ class StatusView @JvmOverloads constructor(
             extraWidth *= 2
         }
 
-        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLength + (lineGap * 2))) + extraWidth).toInt()
+        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLengthComputed + (lineGap * 2))) + extraWidth).toInt()
     }
 
 
@@ -686,7 +694,7 @@ class StatusView @JvmOverloads constructor(
                 }
             }else{
                 lastPoint.x += lineGap
-                lineItem = LineItem(PointF(lastPoint.x, lastPoint.y), PointF(lastPoint.x + lineLength, lastPoint.y), linePaint)
+                lineItem = LineItem(PointF(lastPoint.x, lastPoint.y), PointF(lastPoint.x + lineLengthComputed, lastPoint.y), linePaint)
                 lastPoint.x = lineItem.end.x + lineGap +  (circleStrokeWidth / 2)
             }
 
@@ -771,17 +779,18 @@ class StatusView @JvmOverloads constructor(
 
         val widestLineData: StatusTextWidthInfo = getStatusTextWidthInfo(statusData.map { it.text }, mTextPaintStatus)
 
-        lineLength += widestLineData.widestStatus.width - minStatusWidth(widestLineData.widestStatus.pos)
+        lineLengthComputed += widestLineData.widestStatus.width - minStatusWidth(widestLineData.widestStatus.pos)
 
         widestLineData.subordinateWidestStatus?.run {
             val minStatusWidth = minStatusWidth(pos)
 
             if (width > minStatusWidth) {
-                lineLength += width - minStatusWidth
+                lineLengthComputed += width - minStatusWidth
             }
         }
 
 
+        var addPadding = false
         for (pos in 0 until statusData.size) {
             val item = statusData[pos]
             when (pos) {
@@ -802,7 +811,15 @@ class StatusView @JvmOverloads constructor(
                 }
                 else -> item.width = widestLineData.widestStatus.width
             }
+            if(minMarginStatusText> 0 && !addPadding &&  pos in 1 until  statusData.size){
+                if(minStatusWidth(pos)+minStatusWidth(pos-1) - (item.width+statusData[pos-1].width)<minMarginStatusText){
+                    addPadding = true
+                }
 
+            }
+        }
+        if(addPadding){
+            lineLengthComputed+= minMarginStatusText
         }
         return extraWidth
     }
@@ -811,7 +828,7 @@ class StatusView @JvmOverloads constructor(
     private fun minStatusWidth(pos:Int): Float {
 
         var circleRadius = this.circleRadius
-        val lineWidth = (lineLength + lineGap*2)
+        val lineWidth = (lineLengthComputed + lineGap*2)
 
         if(isShowingCurrentStatus() && pos==currentCountIndex()){
             circleRadius = currentStatusRadius
