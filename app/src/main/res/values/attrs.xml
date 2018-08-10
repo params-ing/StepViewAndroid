@@ -36,7 +36,7 @@
         <attr name="drawCount" format="boolean"/>
         <attr name="obeyLineLength" format="boolean"/>
         <attr name="lineGap" format="dimension"/>
-        <attr name="minMarginStatus" format="dimension"/>
+        <attr name="minStatusMargin" format="dimension"/>
         <attr name="labelTopMargin" format="dimension"/>
         <attr name="currentStatusZoom" format="float"/>
         <attr name="android:entries" />

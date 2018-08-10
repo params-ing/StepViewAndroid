@@ -75,7 +75,7 @@ class StatusView @JvmOverloads constructor(
      *  A min margin that there should be between every adjacent status Text
      *  Note# This only applies if obeyLineLength is set to false
      */
-    var minMarginStatusText: Float by OnLayoutProp(10.0f.pxValue())
+    var minMarginStatusText: Float by OnLayoutProp(5.0f.pxValue())
 
     /**
      *  Set true to obey Status Text i.e alphabets or words belonging to one line would not cross
@@ -111,7 +111,7 @@ class StatusView @JvmOverloads constructor(
      *  Length of line to be drawn between circles
      *  #Note: This does not include line gap
      */
-     var lineLength: Float  = 30.0f.pxValue()/* by OnLayoutProp(30.0f.pxValue())*/ //dp
+     var lineLength: Float  by OnLayoutProp(30.0f.pxValue()) //dp
 
     /**
      * Stroke width of each circle to be drawn
@@ -382,7 +382,7 @@ class StatusView @JvmOverloads constructor(
             drawLabels = a.getBoolean(R.styleable.StatusView_drawCount, drawLabels)
             obeyLineLength = a.getBoolean(R.styleable.StatusView_obeyLineLength, obeyLineLength)
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
-            minMarginStatusText = a.getDimension(R.styleable.StatusView_minMarginStatus, minMarginStatusText)
+            minMarginStatusText = a.getDimension(R.styleable.StatusView_minStatusMargin, minMarginStatusText)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
 
 
@@ -779,7 +779,11 @@ class StatusView @JvmOverloads constructor(
 
         val widestLineData: StatusTextWidthInfo = getStatusTextWidthInfo(statusData.map { it.text }, mTextPaintStatus)
 
-        lineLengthComputed += widestLineData.widestStatus.width - minStatusWidth(widestLineData.widestStatus.pos)
+        val minStatusWidthWidestPos = minStatusWidth(widestLineData.widestStatus.pos)
+        if(widestLineData.widestStatus.width>minStatusWidthWidestPos){
+            lineLengthComputed += widestLineData.widestStatus.width - minStatusWidthWidestPos
+
+        }
 
         widestLineData.subordinateWidestStatus?.run {
             val minStatusWidth = minStatusWidth(pos)
