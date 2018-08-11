@@ -24,14 +24,6 @@ class StatusView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
 
-        /*
-         TODO
-       Display status above|bottom
-       Text Appearance?
-       LTR Support
-       Orientation draw vertical too
-
-     */
 
     companion object {
         const val CIRCLE_COLOR_TYPE_FILL = 1
@@ -343,7 +335,7 @@ class StatusView @JvmOverloads constructor(
 
     /**
      * This contains list of LabelInfo which stores static layout and text.
-     * To the caller it is a list of string and custom getter setters have been made accordingly
+     * To the caller. It is a list of string and custom getter setters have been made accordingly
      *
      */
     private var statusData:MutableList<StatusInfo> by OnLayoutProp(mutableListOf())
@@ -372,7 +364,7 @@ class StatusView @JvmOverloads constructor(
      */
     private var drawingData = mutableListOf<Item>()
     private var currentStatusRadius:Float by OnLayoutProp(circleRadius)
-    private var lineLengthComputed = 0.0f
+    private var lineLengthComputed = 0.0f //actual linelength that is calculated and set
 
 
 
@@ -380,11 +372,22 @@ class StatusView @JvmOverloads constructor(
     //To store the data of each circle
     private class Item(val textData: LabelItemText?, val circleItem: CircleItem, val lineItem: LineItem?, val labelData: StatusItemText?=null)
 
+    //Stores drawing data about labels to be drawn inside circles i.e the count of step
     private class LabelItemText(val text: String? = null, val paint: Paint? = null, val x: Float = 0.0f, val y: Float = 0.0f, val drawableItem: DrawableItem? = null)
+
+    //Stores drawing data for statuses to be drawn below the circle
     private class StatusItemText(val x: Float = 0.0f, val y: Float = 0.0f, val staticLayout: StaticLayout? = null)
+
+    //Stores drawing data for every circle
     private class CircleItem(val center: PointF, val radius: Float, val strokePaint: Paint?, val fillPaint: Paint?)
+
+    //Stores drawing data for every line to be drawn between circles
     private class LineItem(val start: PointF, val end: PointF, val paint: Paint)
+
+    //Stores drawable draw info
     private class DrawableItem(val rect: Rect, val drawable: Drawable)
+
+    //Stores information about every status text and its dimension properties
     private class StatusInfo(val text:String, var width:Float=0.0f, var height:Float=0.0f, var staticLayout: StaticLayout? = null)
 
 
@@ -398,15 +401,10 @@ class StatusView @JvmOverloads constructor(
 
             statusCount = a.getInt(R.styleable.StatusView_statusCount, statusCount)
             currentCount = a.getInt(R.styleable.StatusView_currentCount, INVALID_STATUS_COUNT)
-
             circleRadius = a.getDimension(R.styleable.StatusView_circleRadius, circleRadius)
             lineLength = a.getDimension(R.styleable.StatusView_lineLength, lineLength)
-
-
             circleStrokeWidth = a.getDimension(R.styleable.StatusView_circleStrokeWidth, circleStrokeWidth)
             lineStrokeWidth = a.getDimension(R.styleable.StatusView_lineWidth, lineStrokeWidth)
-
-
             completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
             incompleteDrawable = a.getDrawable(R.styleable.StatusView_incomplete_drawable)
             currentDrawable = a.getDrawable(R.styleable.StatusView_current_drawable)
@@ -415,8 +413,6 @@ class StatusView @JvmOverloads constructor(
             lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
             minMarginStatusText = a.getDimension(R.styleable.StatusView_minStatusMargin, minMarginStatusText)
             labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
-
-
             lineColor = a.getColor(R.styleable.StatusView_lineColor, lineColor)
             circleFillColor = a.getColor(R.styleable.StatusView_circleColor, circleFillColor)
             circleStrokeColor = a.getColor(R.styleable.StatusView_circleStrokeColor, circleStrokeColor)
@@ -424,7 +420,6 @@ class StatusView @JvmOverloads constructor(
             textColorLabels = a.getColor(R.styleable.StatusView_textColorLabels, textColorLabels)
             textSizeStatus = a.getDimension(R.styleable.StatusView_textSize, textSizeStatus)
             textSizeLabels = a.getDimension(R.styleable.StatusView_textSizeLabels, textSizeLabels)
-
             circleColorType = a.getInteger(R.styleable.StatusView_circleColorType, circleColorType)
             textColorLabelsIncomplete = a.getColor(R.styleable.StatusView_textColorLabelsIncomplete, textColorStatus)
             textColorLabelCurrent = a.getColor(R.styleable.StatusView_textColorLabelsCurrent, textColorLabelCurrent)
@@ -432,7 +427,6 @@ class StatusView @JvmOverloads constructor(
             lineColorCurrent= a.getColor(R.styleable.StatusView_lineColorCurrent, lineColorCurrent)
             circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorIncomplete, circleFillColor)
             circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete, circleStrokeColor)
-
             circleFillColorCurrent = a.getColor(R.styleable.StatusView_circleColorCurrent, circleFillColorIncomplete)
             currentStatusZoom = a.getFloat(R.styleable.StatusView_currentStatusZoom, currentStatusZoom)
             alignStatusWithCurrent = a.getBoolean(R.styleable.StatusView_alignStatusWithCurrent, alignStatusWithCurrent)
@@ -586,7 +580,7 @@ class StatusView @JvmOverloads constructor(
 
 
         lineLengthComputed = lineLength
-        var extraWidth =  if(obeyLineLength){
+        var extraWidth =  if(obeyLineLength){// extra width required by status at extreme positions
             setWidthDataForObeyingLineLength()
         }else{
             setWidthDataForObeyingStatusText()
@@ -601,7 +595,8 @@ class StatusView @JvmOverloads constructor(
             extraWidth *= 2
         }
 
-        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) + ((statusCount - 1) * ( lineLengthComputed + (lineGap * 2))) + extraWidth).toInt()
+        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) +
+        ((statusCount - 1) * ( lineLengthComputed + (lineGap * 2))) + extraWidth).toInt()
     }
 
 
@@ -626,23 +621,16 @@ class StatusView @JvmOverloads constructor(
         val desiredWidth = paddingLeft + paddingRight + suggestedMinimumWidth
         val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
-        val measureSpecWidth = MeasureSpec.getMode(widthMeasureSpec)
-        val measureSpecHeight = MeasureSpec.getMode(heightMeasureSpec)
-        /*if(measureSpecHeight!=MeasureSpec.AT_MOST || measureSpecWidth!=MeasureSpec.AT_MOST){
+       /* val measureSpecWidth = MeasureSpec.getMode(widthMeasureSpec)
+          val measureSpecHeight = MeasureSpec.getMode(heightMeasureSpec)
+        *//*if(measureSpecHeight!=MeasureSpec.AT_MOST || measureSpecWidth!=MeasureSpec.AT_MOST){
             throw IllegalStateException("Width and height should be wrap_content")
-        }*/
-
-
-
+        }*//*
+*/
         val measuredWidth = resolveSize(desiredWidth, widthMeasureSpec)
         val measuredHeight = resolveSize(desiredHeight, heightMeasureSpec)
 
-
-
         setMeasuredDimension(measuredWidth, measuredHeight)
-
-
-
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -702,14 +690,12 @@ class StatusView @JvmOverloads constructor(
      */
     private fun setDrawingDimensions() {
 
-        /**
-         * For keeping reference where last point was drawn
-         */
-        val lastPoint = PointF()
+
+        val lastPoint = PointF()//For keeping reference where last point was drawn
         lastPoint.x = paddingLeft.toFloat() + (circleStrokeWidth / 2)
         lastPoint.y = paddingTop.toFloat() + (circleRadius + (circleStrokeWidth / 2))
         if(isShowingCurrentStatus()) lastPoint.y += currentStatusRadius-circleRadius
-        for (i in 0 until statusCount) {
+        for (pos in 0 until statusCount) {
 
             var circleStrokePaint: Paint?
             var circleFillPaint : Paint?
@@ -718,14 +704,14 @@ class StatusView @JvmOverloads constructor(
             var itemDrawable: Drawable?
 
             var circleRadius = this.circleRadius
-            if(isShowingCurrentStatus() && i==(currentCount-1)){
+            if(isShowingCurrentStatus() && pos==(currentCount-1)){
                 circleRadius = currentStatusRadius
                 circleStrokePaint = mCircleStrokePaintCurrent
                 circleFillPaint = mCircleFillPaintCurrent
                 textPaintLabel = mTextPaintLabelCurrent
                 linePaint = mLinePaintCurrent
                 itemDrawable = currentDrawable
-            }else if (isShowingIncompleteStatus() && i in (currentCount)..statusCount) {
+            }else if (isShowingIncompleteStatus() && pos in (currentCount)..statusCount) {
                 circleStrokePaint = mCircleStrokePaintIncomplete
                 circleFillPaint = mCircleFillPaintIncomplete
                 textPaintLabel = mTextPaintLabelsIncomplete
@@ -747,10 +733,9 @@ class StatusView @JvmOverloads constructor(
             var labelItemText: StatusView.StatusItemText? = null
 
 
-            if(i==0){
+            if(pos==0){
                 if(statusData.size>0){
-                    val minWidthForExtreme = 2 * circleRadius + circleStrokeWidth
-                    lastPoint.x+= Math.max(0.0f, (statusData[0].width - minWidthForExtreme)/2)
+                    lastPoint.x+= Math.max(0.0f, (statusData[0].width - minStatusWidthExtremes(pos))/2)
                 }
             }else{
                 lastPoint.x += lineGap
@@ -762,9 +747,9 @@ class StatusView @JvmOverloads constructor(
             val circleItem = CircleItem(PointF((lastPoint.x + circleRadius), lastPoint.y), circleRadius, circleStrokePaint, circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f) + (circleStrokeWidth / 2)
 
-            if(i<statusData.size){
+            if(pos<statusData.size){
                 val radii = if(isShowingCurrentStatus() && alignStatusWithCurrent) currentStatusRadius else circleRadius
-                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + labelTopMargin, statusData[i].staticLayout)
+                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + labelTopMargin, statusData[pos].staticLayout)
             }
 
 
@@ -778,7 +763,7 @@ class StatusView @JvmOverloads constructor(
                 statusItemText = LabelItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
 
             } else if (drawLabels) {
-                val text: String = (i + 1).toString()
+                val text: String = (pos + 1).toString()
                 val measuringRect = Rect()
                 textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
                 statusItemText = LabelItemText(text, textPaintLabel, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
@@ -794,15 +779,13 @@ class StatusView @JvmOverloads constructor(
 
 
     /**
-     * @param lineLength lineLength of StatusView
-     * @param circleRadius circleRadius Of StatusView
      *
-     * For non-extreme statuses:
-     * Function sets the width value to circleRadius + linelength/2 (left side) + linelength/2 (rightSide)
+       For non-extreme statuses:
+     * Function sets the width value to minStatusWidth
      *
      * For extreme statuses:
-     * It calculates value using findAdjustWidthForExtremes() as assigning the same width as
-     * non-extreme may end up giving extraPadding to the view
+     * It calculates min of extreme width required in bounds of lineLength as
+     * directly adding minStatusWidth may end up adding extra padding to view
      */
     private fun setWidthDataForObeyingLineLength():Float {
         var adjacentExtraWidthForView = 0.0f
@@ -811,7 +794,7 @@ class StatusView @JvmOverloads constructor(
 
             val item = statusData[pos]
             when (pos) {
-                0, statusCount - 1 -> {
+                0, statusCountIndex() -> {
 
                     val minStatusWidthExtremes = minStatusWidthExtremes(pos)
                     val minStatusWidth = minStatusWidth(pos)
@@ -835,6 +818,12 @@ class StatusView @JvmOverloads constructor(
     }
 
 
+    /**
+     * Sets required width in status data for every status
+     * This method increases linelength if required i.e
+     * it makes sure every line of status word does not cross over to next line
+     *
+     */
     private fun setWidthDataForObeyingStatusText(): Float {
         var extraWidth = 0.0f
 
@@ -847,6 +836,8 @@ class StatusView @JvmOverloads constructor(
         }
 
         widestLineData.subordinateWidestStatus?.run {
+       //in case increasing linelength as per widest Status does not satisfy statusWidth for second widest
+       //This can occur if widestStatus belongs to currentStatus and  has a zoomed radius
             val minStatusWidth = minStatusWidth(pos)
 
             if (width > minStatusWidth) {
@@ -855,11 +846,11 @@ class StatusView @JvmOverloads constructor(
         }
 
 
-        var addPadding = false
+        var addMinStatusMargin = false
         for (pos in 0 until statusData.size) {
             val item = statusData[pos]
             when (pos) {
-                0, (statusCount - 1) -> {
+                0, statusCountIndex() -> {
 
                     item.width = if (pos == 0) {
                         widestLineData.extremeLeftStatusWidth
@@ -876,14 +867,16 @@ class StatusView @JvmOverloads constructor(
                 }
                 else -> item.width = widestLineData.widestStatus.width
             }
-            if(minMarginStatusText> 0 && !addPadding &&  pos in 1 until  statusData.size){
-                if(minStatusWidth(pos)+minStatusWidth(pos-1) - (item.width+statusData[pos-1].width)<minMarginStatusText){
-                    addPadding = true
+
+            if(minMarginStatusText> 0 && !addMinStatusMargin &&  pos in 1 until  statusData.size){
+                if(minStatusWidth(pos)+ minStatusWidth(pos-1) - (item.width+statusData[pos-1].width)<minMarginStatusText){
+                    addMinStatusMargin = true
                 }
 
             }
         }
-        if(addPadding){
+        if(addMinStatusMargin){
+            //add additional padding only if it is required
             lineLengthComputed+= minMarginStatusText
         }
         return extraWidth
@@ -912,7 +905,7 @@ class StatusView @JvmOverloads constructor(
     }
 
     /**
-     * Maximum width that a text would need
+     * Maximum width that a text would need to be drawn
      */
     private fun getTextWidth(paint:Paint, text:String):Float{
         return paint.measureText(text)
@@ -947,11 +940,29 @@ class StatusView @JvmOverloads constructor(
     }
 
 
+    /**
+     * This class stores info for widest Status info length which helps in deciding correct line length of StatusView
+     * @param widestStatus  (widest line in all the texts)
+     * @param subordinateWidestStatus second Widest Status this is only set if widest status belongs to currentStatus
+     * @param extremeLeftStatusWidth Widest line in status at extreme left
+     * @param extremeRightStatusWidth Widest line in status at extreme right
+     */
     class StatusTextWidthInfo(var widestStatus:StatusWidth, var subordinateWidestStatus:StatusWidth?=null,
                               var extremeLeftStatusWidth:Float=0.0f, var extremeRightStatusWidth:Float=0.0f)
 
+    /**
+     * Stores Status Width Data
+     * @param width widestStatus
+     * @param pos Status position
+     */
     class StatusWidth(var width: Float = 0.0f, var pos:Int=-1)
 
+    /**
+     * Calculates parameters described in StatusTextWidthInfo
+     * @param list List of string for all statuses
+     * @param paint Paint required to draw the statuses
+     *
+     */
     private fun getStatusTextWidthInfo(list:List<String>, paint:TextPaint):StatusTextWidthInfo{
 
         val widestStatus = StatusWidth()
@@ -995,6 +1006,11 @@ class StatusView @JvmOverloads constructor(
 
     }
 
+    /**
+     * @param text Status Text
+     * @param paint Text paint for the text
+     * @return widest line in a particular status
+     */
     private fun getStatusWidth(text:String, paint: TextPaint):Float{
 
         val arr:List<String> = text.split('\n')
@@ -1020,13 +1036,19 @@ class StatusView @JvmOverloads constructor(
     }
 
 
+    /**
+     * actual position in list for currentCount
+     */
     private fun currentCountIndex() = currentCount-1
 
+    /**
+     * actual position in  list for statusCount
+     */
     private fun statusCountIndex() = statusCount-1
 
 
     /**
-     * Delegate property used to requestLayout if any value changed
+     * Delegate property used to requestLayout on value set after executing a custom function
      */
     inner class OnLayoutProp<T> (private var field:T, private inline var func:()->Unit={}){
         operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
@@ -1046,7 +1068,7 @@ class StatusView @JvmOverloads constructor(
     }
 
     /**
-     * Delegate Property used to invalidate a layout after executing a custom function
+     * Delegate Property used to invalidate on value set after executing a custom function
      */
     inner class  OnValidateProp<T> (private var field:T, private inline var func:()->Unit={}){
         operator fun setValue(thisRef: Any?,p: KProperty<*>,v: T) {
