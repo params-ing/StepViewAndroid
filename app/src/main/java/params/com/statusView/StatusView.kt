@@ -413,6 +413,7 @@ class StatusView @JvmOverloads constructor(
 
     init {
 
+        id  = ViewCompat.generateViewId()//as the same attrs are being passed this view would have the same id as scroller.
 
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.StatusViewScroller, 0, 0)
 
