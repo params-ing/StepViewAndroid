@@ -2,7 +2,7 @@
 <resources>
 
 
-    <declare-styleable name="StatusView">
+    <declare-styleable name="StatusViewScroller">
         <attr name="circleRadius" format="dimension" />
         <attr name="statusCount" format="integer" />
         <attr name="currentCount" format="integer" />

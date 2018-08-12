@@ -151,9 +151,10 @@ class StatusView @JvmOverloads constructor(
     /**
      * Stroke width of the line between circles (dp)
      */
-    var lineStrokeWidth: Float by OnValidateProp(2.0f.pxValue()) {
+    var lineStrokeWidth: Float by OnValidateProp(1.5f.pxValue()) {
         mLinePaint.strokeWidth = lineStrokeWidth
         mLinePaintIncomplete.strokeWidth = lineStrokeWidth
+        mLinePaintCurrent.strokeWidth = lineStrokeWidth
     }
 
     /**
@@ -413,43 +414,44 @@ class StatusView @JvmOverloads constructor(
     init {
 
 
-        val a = context.theme.obtainStyledAttributes(attrs, R.styleable.StatusView, 0, 0)
+        val a = context.theme.obtainStyledAttributes(attrs, R.styleable.StatusViewScroller, 0, 0)
 
         try {
 
-            statusCount = a.getInt(R.styleable.StatusView_statusCount, statusCount)
-            currentCount = a.getInt(R.styleable.StatusView_currentCount, INVALID_STATUS_COUNT)
-            circleRadius = a.getDimension(R.styleable.StatusView_circleRadius, circleRadius)
-            lineLength = a.getDimension(R.styleable.StatusView_lineLength, lineLength)
-            circleStrokeWidth = a.getDimension(R.styleable.StatusView_circleStrokeWidth, circleStrokeWidth)
-            lineStrokeWidth = a.getDimension(R.styleable.StatusView_lineWidth, lineStrokeWidth)
-            completeDrawable = a.getDrawable(R.styleable.StatusView_complete_drawable)
-            incompleteDrawable = a.getDrawable(R.styleable.StatusView_incomplete_drawable)
-            currentDrawable = a.getDrawable(R.styleable.StatusView_current_drawable)
-            drawLabels = a.getBoolean(R.styleable.StatusView_drawCount, drawLabels)
-            obeyLineLength = a.getBoolean(R.styleable.StatusView_obeyLineLength, obeyLineLength)
-            lineGap = a.getDimension(R.styleable.StatusView_lineGap, lineGap)
-            minMarginStatusText = a.getDimension(R.styleable.StatusView_minStatusMargin, minMarginStatusText)
-            labelTopMargin = a.getDimension(R.styleable.StatusView_labelTopMargin, labelTopMargin)
-            lineColor = a.getColor(R.styleable.StatusView_lineColor, lineColor)
-            circleFillColor = a.getColor(R.styleable.StatusView_circleColor, circleFillColor)
-            circleStrokeColor = a.getColor(R.styleable.StatusView_circleStrokeColor, circleStrokeColor)
-            textColorStatus = a.getColor(R.styleable.StatusView_textColor, textColorStatus)
-            textColorLabels = a.getColor(R.styleable.StatusView_textColorLabels, textColorLabels)
-            textSizeStatus = a.getDimension(R.styleable.StatusView_textSize, textSizeStatus)
-            textSizeLabels = a.getDimension(R.styleable.StatusView_textSizeLabels, textSizeLabels)
-            circleColorType = a.getInteger(R.styleable.StatusView_circleColorType, circleColorType)
-            textColorLabelsIncomplete = a.getColor(R.styleable.StatusView_textColorLabelsIncomplete, textColorStatus)
-            textColorLabelCurrent = a.getColor(R.styleable.StatusView_textColorLabelsCurrent, textColorLabelCurrent)
-            lineColorIncomplete = a.getColor(R.styleable.StatusView_lineColorIncomplete, lineColorIncomplete)
-            lineColorCurrent= a.getColor(R.styleable.StatusView_lineColorCurrent, lineColorCurrent)
-            circleFillColorIncomplete = a.getColor(R.styleable.StatusView_circleColorIncomplete, circleFillColor)
-            circleStrokeColorIncomplete = a.getColor(R.styleable.StatusView_circleStrokeColorIncomplete, circleStrokeColor)
-            circleFillColorCurrent = a.getColor(R.styleable.StatusView_circleColorCurrent, circleFillColorIncomplete)
-            currentStatusZoom = a.getFloat(R.styleable.StatusView_currentStatusZoom, currentStatusZoom)
-            alignStatusWithCurrent = a.getBoolean(R.styleable.StatusView_alignStatusWithCurrent, alignStatusWithCurrent)
+            statusCount = a.getInt(R.styleable.StatusViewScroller_statusCount, statusCount)
+            currentCount = a.getInt(R.styleable.StatusViewScroller_currentCount, INVALID_STATUS_COUNT)
+            circleRadius = a.getDimension(R.styleable.StatusViewScroller_circleRadius, circleRadius)
+            lineLength = a.getDimension(R.styleable.StatusViewScroller_lineLength, lineLength)
+            circleStrokeWidth = a.getDimension(R.styleable.StatusViewScroller_circleStrokeWidth, circleStrokeWidth)
+            lineStrokeWidth = a.getDimension(R.styleable.StatusViewScroller_lineWidth, lineStrokeWidth)
+            completeDrawable = a.getDrawable(R.styleable.StatusViewScroller_complete_drawable)
+            incompleteDrawable = a.getDrawable(R.styleable.StatusViewScroller_incomplete_drawable)
+            currentDrawable = a.getDrawable(R.styleable.StatusViewScroller_current_drawable)
+            drawLabels = a.getBoolean(R.styleable.StatusViewScroller_drawCount, drawLabels)
+            obeyLineLength = a.getBoolean(R.styleable.StatusViewScroller_obeyLineLength, obeyLineLength)
+            lineGap = a.getDimension(R.styleable.StatusViewScroller_lineGap, lineGap)
+            minMarginStatusText = a.getDimension(R.styleable.StatusViewScroller_minStatusMargin, minMarginStatusText)
+            labelTopMargin = a.getDimension(R.styleable.StatusViewScroller_labelTopMargin, labelTopMargin)
+            lineColor = a.getColor(R.styleable.StatusViewScroller_lineColor, lineColor)
+            circleFillColor = a.getColor(R.styleable.StatusViewScroller_circleColor, circleFillColor)
+            circleStrokeColor = a.getColor(R.styleable.StatusViewScroller_circleStrokeColor, circleStrokeColor)
+            textColorStatus = a.getColor(R.styleable.StatusViewScroller_textColor, textColorStatus)
+            textColorLabels = a.getColor(R.styleable.StatusViewScroller_textColorLabels, textColorLabels)
+            textSizeStatus = a.getDimension(R.styleable.StatusViewScroller_textSize, textSizeStatus)
+            textSizeLabels = a.getDimension(R.styleable.StatusViewScroller_textSizeLabels, textSizeLabels)
+            circleColorType = a.getInteger(R.styleable.StatusViewScroller_circleColorType, circleColorType)
+            textColorLabelsIncomplete = a.getColor(R.styleable.StatusViewScroller_textColorLabelsIncomplete, textColorLabels)
+            textColorLabelCurrent = a.getColor(R.styleable.StatusViewScroller_textColorLabelsCurrent, textColorLabelsIncomplete)
+            lineColorIncomplete = a.getColor(R.styleable.StatusViewScroller_lineColorIncomplete, lineColor)
+            lineColorCurrent= a.getColor(R.styleable.StatusViewScroller_lineColorCurrent, lineColorIncomplete)
+            circleFillColorIncomplete = a.getColor(R.styleable.StatusViewScroller_circleColorIncomplete, circleFillColor)
+            circleStrokeColorIncomplete = a.getColor(R.styleable.StatusViewScroller_circleStrokeColorIncomplete, circleStrokeColor)
+            circleStrokeColorCurrent = a.getColor(R.styleable.StatusViewScroller_circleStrokeColorCurrent, circleStrokeColorIncomplete)
+            circleFillColorCurrent = a.getColor(R.styleable.StatusViewScroller_circleColorCurrent, circleFillColorIncomplete)
+            currentStatusZoom = a.getFloat(R.styleable.StatusViewScroller_currentStatusZoom, currentStatusZoom)
+            alignStatusWithCurrent = a.getBoolean(R.styleable.StatusViewScroller_alignStatusWithCurrent, alignStatusWithCurrent)
 
-            val entries = a.getTextArray(R.styleable.StatusView_android_entries)
+            val entries = a.getTextArray(R.styleable.StatusViewScroller_android_entries)
             if (entries != null) {
                 for(entry in entries){
                     statusData.add(StatusInfo(entry.toString()))
@@ -457,7 +459,7 @@ class StatusView @JvmOverloads constructor(
             }
 
             try {
-                val resource: Int = a.getResourceId(R.styleable.StatusView_statusFont, -1)
+                val resource: Int = a.getResourceId(R.styleable.StatusViewScroller_statusFont, -1)
                 if (resource != -1) {
                     statusTypeface = ResourcesCompat.getFont(getContext(), resource)
                 }
@@ -466,7 +468,7 @@ class StatusView @JvmOverloads constructor(
             }
 
             try {
-                val resource: Int = a.getResourceId(R.styleable.StatusView_labelFont, -1)
+                val resource: Int = a.getResourceId(R.styleable.StatusViewScroller_labelFont, -1)
                 if (resource != -1) {
                     labelsTypeface = ResourcesCompat.getFont(getContext(), resource)
                 }

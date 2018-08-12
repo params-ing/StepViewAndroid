@@ -17,18 +17,13 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:circleColorType="fillStroke"
-            app:statusCount="15"
-            app:currentCount="3"
-            app:lineLength="25dp"
-            app:circleRadius="25dp"
-            app:obeyLineLength="false"
-            app:currentStatusZoom="0.5"
+            app:circleColor="#F1EA7F"
+            app:circleRadius="20dp"
+            app:complete_drawable="@drawable/ic_done_black_24dp"
+            app:statusCount="4"
+            app:currentCount="4"
             app:drawCount="true"
-            app:statusFont="@font/montserrat_r"
-            app:labelFont="@font/roboto_r"
-            android:entries="@array/statuses"
-            app:current_drawable="@drawable/ic_tag_faces_black_24dp" />
+            android:entries="@array/statuses" />
 
 
 
