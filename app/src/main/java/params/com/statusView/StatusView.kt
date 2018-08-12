@@ -12,9 +12,27 @@ import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
+import android.widget.HorizontalScrollView
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
+class StatusViewScroller @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : HorizontalScrollView(context, attrs, defStyleAttr) {
+
+    private var statusView:StatusView = StatusView(context,attrs)
+
+    init{
+        addView(statusView)
+    }
+
+    fun scrollToPos(count:Int){
+        scrollTo(statusView.getScrollPosForStatus(count).toInt(),scrollY)
+    }
+    fun smoothScrollToPos(count:Int){
+        smoothScrollTo(statusView.getScrollPosForStatus(count).toInt(),scrollY)
+    }
+}
 
 /**
  * Created by Parminder Saini on 12/06/18.
@@ -1090,5 +1108,13 @@ class StatusView @JvmOverloads constructor(
         return TypedValue.applyDimension(unit,this,resources.displayMetrics)
     }
 
+    fun getScrollPosForStatus(count: Int): Int {
+        val posIndex = count - 1
+        return if (posIndex> 0 && posIndex < drawingData.size) {
+            drawingData[posIndex].circleItem.center.x.toInt()
+        } else {
+            0
+        }
+    }
 
 }
