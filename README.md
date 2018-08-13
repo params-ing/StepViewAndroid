@@ -1,5 +1,5 @@
 # StepViewAndroid
-An android library written in kotlin to display steps (without any max-min limits) along with the status/description. It also supports some really cool features.
+An Android library written in kotlin to display steps (without any max-min limits) along with the status/description. It also supports some really cool features.
 
 ## Usage
 
@@ -7,9 +7,13 @@ An android library written in kotlin to display steps (without any max-min limit
 
 ![Downloading..](https://github.com/params-ing/StepViewAndroid/blob/dev/screenshots/colors_stepview.png)
 
-* Set total step count and current count.
+* Set step count and current count.
 
-* Set different dimensions for stroke width, line width, text size of label (step count) & line Gap.
+* Set different dimensions for circle radius, line length, line gap, stroke width, line width, text size of label (step count).
+
+* Set status data using ```android:entries```
+
+* Chose a color mode i.e  fill, stroke or both using ```circleColorType```
 
 * Stroke color (circle), fill color (circle), line color & label text color can be set differently for completed, current & incomplete states.
 
@@ -19,7 +23,7 @@ An android library written in kotlin to display steps (without any max-min limit
     android:layout_height="wrap_content"
     app:stepCount="5"
     app:currentCount="4"
-    app:drawCount="true"
+    app:drawLabels="true"
     android:entries="@array/status"
     app:circleColorType="fillStroke"
     app:lineGap="5dp"
@@ -36,7 +40,7 @@ An android library written in kotlin to display steps (without any max-min limit
     app:circleStrokeWidth="4dp"
     app:circleStrokeColorCurrent="#91A8D0"
     app:textSizeLabels="15sp"
-    app:complete_drawable="@drawable/ic_done_black_24dp" />
+    app:completeDrawable="@drawable/ic_done_black_24dp" />
 ```
 
 ### Some more customisations
@@ -48,12 +52,12 @@ An android library written in kotlin to display steps (without any max-min limit
 
 ```XML
     app:currentStepZoom="0.5"
-    app:complete_drawable="@drawable/ic_satisfied_black_24dp"
-    app:current_drawable="@drawable/ic_dissatisfied_black_24dp"
-    app:incomplete_drawable="@drawable/ic_very_dissatisfied_black_24dp"
+    app:completeDrawable="@drawable/ic_satisfied_black_24dp"
+    app:currentDrawable="@drawable/ic_dissatisfied_black_24dp"
+    app:incompleteDrawable="@drawable/ic_very_dissatisfied_black_24dp"
 ```
 
-### Step Status customisations
+### Step status customisations
 
 ![Downloading..](https://github.com/params-ing/StepViewAndroid/blob/dev/screenshots/android_stepview.png)
 
@@ -79,4 +83,4 @@ An android library written in kotlin to display steps (without any max-min limit
 ![Downloading..](https://github.com/params-ing/StepViewAndroid/blob/dev/screenshots/fragment_scroll_stepview.gif)
 
 * The view can be scrolled if the content exceeds the available width.
-* You can also scroll to a particular step by calling ```statusViewScroller.scrollToPos(stepCount)```
+* You can also scroll to a particular step by calling ```statusViewScroller.scrollToStep(stepCount)```

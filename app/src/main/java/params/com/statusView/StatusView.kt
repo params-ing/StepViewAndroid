@@ -26,11 +26,11 @@ class StatusViewScroller @JvmOverloads constructor(
         addView(statusView)
     }
 
-    fun scrollToPos(count:Int){
-        scrollTo(statusView.getScrollPosForStatus(count).toInt(),scrollY)
+    fun scrollToStep(stepCount:Int){
+        scrollTo(statusView.getScrollPosForStep(stepCount),scrollY)
     }
-    fun smoothScrollToPos(count:Int){
-        smoothScrollTo(statusView.getScrollPosForStatus(count).toInt(),scrollY)
+    fun smoothScrollToStep(stepCount:Int){
+        smoothScrollTo(statusView.getScrollPosForStep(stepCount),scrollY)
     }
 }
 
@@ -82,9 +82,9 @@ class StatusView @JvmOverloads constructor(
 
     /**
      *  A min margin that there should be between every adjacent status Text
-     *  Note# This only applies if obeyLineLength is set to false
+     *  Note# This only applies if strictObeyLineLength is set to false
      */
-    var minMarginStatusText: Float by OnLayoutProp(5.0f.pxValue())
+    var minStatusAdjacentMargin: Float by OnLayoutProp(5.0f.pxValue())
 
     /**
      *  Set true to obey Status Text i.e alphabets or words belonging to one line would not cross
@@ -94,13 +94,13 @@ class StatusView @JvmOverloads constructor(
      *
      *
      */
-    var obeyLineLength: Boolean by OnLayoutProp(false)
+    var strictObeyLineLength: Boolean by OnLayoutProp(false)
 
 
     /**
     * The total number of statuses to be displayed
     */
-    var statusCount: Int by OnLayoutProp(4)
+    var stepCount: Int by OnLayoutProp(4)
 
     /*
     The count up to  which status has been completed
@@ -136,9 +136,9 @@ class StatusView @JvmOverloads constructor(
 
 
     /**
-     * Top Margin of Labels from circle
+     * Top Margin of Status from circle
      */
-     var labelTopMargin by OnLayoutProp( 4.0f.pxValue())
+     var statusTopMargin by OnLayoutProp( 4.0f.pxValue())
 
     /**
      *  set true to align all status to align same as current Status y-pos
@@ -151,10 +151,10 @@ class StatusView @JvmOverloads constructor(
     /**
      * Stroke width of the line between circles (dp)
      */
-    var lineStrokeWidth: Float by OnValidateProp(1.5f.pxValue()) {
-        mLinePaint.strokeWidth = lineStrokeWidth
-        mLinePaintIncomplete.strokeWidth = lineStrokeWidth
-        mLinePaintCurrent.strokeWidth = lineStrokeWidth
+    var lineWidth: Float by OnValidateProp(1.5f.pxValue()) {
+        mLinePaint.strokeWidth = lineWidth
+        mLinePaintIncomplete.strokeWidth = lineWidth
+        mLinePaintCurrent.strokeWidth = lineWidth
     }
 
     /**
@@ -366,11 +366,11 @@ class StatusView @JvmOverloads constructor(
 
     /**
      * Creates List<LabelInfo> from List<String> by passing default values.
-     * #Note: It trims any extra statuses (if size is greater than statusCount)
+     * #Note: It trims any extra statuses (if size is greater than stepCount)
      */
     fun setStatusList(list: List<String>) {
         //to make sure original list is not modified convert to mutableList
-       val input =  list.toMutableList().dropLast(statusCount)
+       val input =  list.toMutableList().dropLast(stepCount)
 
         statusData  = (input.map{StatusInfo(it)}).toMutableList()
 
@@ -419,26 +419,26 @@ class StatusView @JvmOverloads constructor(
 
         try {
 
-            statusCount = a.getInt(R.styleable.StatusViewScroller_statusCount, statusCount)
+            stepCount = a.getInt(R.styleable.StatusViewScroller_stepCount, stepCount)
             currentCount = a.getInt(R.styleable.StatusViewScroller_currentCount, INVALID_STATUS_COUNT)
             circleRadius = a.getDimension(R.styleable.StatusViewScroller_circleRadius, circleRadius)
             lineLength = a.getDimension(R.styleable.StatusViewScroller_lineLength, lineLength)
             circleStrokeWidth = a.getDimension(R.styleable.StatusViewScroller_circleStrokeWidth, circleStrokeWidth)
-            lineStrokeWidth = a.getDimension(R.styleable.StatusViewScroller_lineWidth, lineStrokeWidth)
-            completeDrawable = a.getDrawable(R.styleable.StatusViewScroller_complete_drawable)
-            incompleteDrawable = a.getDrawable(R.styleable.StatusViewScroller_incomplete_drawable)
-            currentDrawable = a.getDrawable(R.styleable.StatusViewScroller_current_drawable)
-            drawLabels = a.getBoolean(R.styleable.StatusViewScroller_drawCount, drawLabels)
-            obeyLineLength = a.getBoolean(R.styleable.StatusViewScroller_obeyLineLength, obeyLineLength)
+            lineWidth = a.getDimension(R.styleable.StatusViewScroller_lineWidth, lineWidth)
+            completeDrawable = a.getDrawable(R.styleable.StatusViewScroller_completeDrawable)
+            incompleteDrawable = a.getDrawable(R.styleable.StatusViewScroller_incompleteDrawable)
+            currentDrawable = a.getDrawable(R.styleable.StatusViewScroller_currentDrawable)
+            drawLabels = a.getBoolean(R.styleable.StatusViewScroller_drawLabels, drawLabels)
+            strictObeyLineLength = a.getBoolean(R.styleable.StatusViewScroller_strictObeyLineLength, strictObeyLineLength)
             lineGap = a.getDimension(R.styleable.StatusViewScroller_lineGap, lineGap)
-            minMarginStatusText = a.getDimension(R.styleable.StatusViewScroller_minStatusMargin, minMarginStatusText)
-            labelTopMargin = a.getDimension(R.styleable.StatusViewScroller_labelTopMargin, labelTopMargin)
+            minStatusAdjacentMargin = a.getDimension(R.styleable.StatusViewScroller_minStatusAdjacentMargin, minStatusAdjacentMargin)
+            statusTopMargin = a.getDimension(R.styleable.StatusViewScroller_statusTopMargin, statusTopMargin)
             lineColor = a.getColor(R.styleable.StatusViewScroller_lineColor, lineColor)
             circleFillColor = a.getColor(R.styleable.StatusViewScroller_circleColor, circleFillColor)
             circleStrokeColor = a.getColor(R.styleable.StatusViewScroller_circleStrokeColor, circleStrokeColor)
-            textColorStatus = a.getColor(R.styleable.StatusViewScroller_textColor, textColorStatus)
+            textColorStatus = a.getColor(R.styleable.StatusViewScroller_textColorStatus, textColorStatus)
             textColorLabels = a.getColor(R.styleable.StatusViewScroller_textColorLabels, textColorLabels)
-            textSizeStatus = a.getDimension(R.styleable.StatusViewScroller_textSize, textSizeStatus)
+            textSizeStatus = a.getDimension(R.styleable.StatusViewScroller_textSizeStatus, textSizeStatus)
             textSizeLabels = a.getDimension(R.styleable.StatusViewScroller_textSizeLabels, textSizeLabels)
             circleColorType = a.getInteger(R.styleable.StatusViewScroller_circleColorType, circleColorType)
             textColorLabelsIncomplete = a.getColor(R.styleable.StatusViewScroller_textColorLabelsIncomplete, textColorLabels)
@@ -449,7 +449,7 @@ class StatusView @JvmOverloads constructor(
             circleStrokeColorIncomplete = a.getColor(R.styleable.StatusViewScroller_circleStrokeColorIncomplete, circleStrokeColor)
             circleStrokeColorCurrent = a.getColor(R.styleable.StatusViewScroller_circleStrokeColorCurrent, circleStrokeColorIncomplete)
             circleFillColorCurrent = a.getColor(R.styleable.StatusViewScroller_circleColorCurrent, circleFillColorIncomplete)
-            currentStatusZoom = a.getFloat(R.styleable.StatusViewScroller_currentStatusZoom, currentStatusZoom)
+            currentStatusZoom = a.getFloat(R.styleable.StatusViewScroller_currentStepZoom, currentStatusZoom)
             alignStatusWithCurrent = a.getBoolean(R.styleable.StatusViewScroller_alignStatusWithCurrent, alignStatusWithCurrent)
 
             val entries = a.getTextArray(R.styleable.StatusViewScroller_android_entries)
@@ -490,7 +490,7 @@ class StatusView @JvmOverloads constructor(
 
         mLinePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         mLinePaint.style = Paint.Style.STROKE
-        mLinePaint.strokeWidth = lineStrokeWidth
+        mLinePaint.strokeWidth = lineWidth
         mLinePaint.color = lineColor
 
 
@@ -591,17 +591,17 @@ class StatusView @JvmOverloads constructor(
 
 
     private fun isShowingIncompleteStatus() =
-            currentCount > INVALID_STATUS_COUNT && currentCount < statusCount
+            currentCount > INVALID_STATUS_COUNT && currentCount < stepCount
 
     private fun isShowingCurrentStatus()=
-            currentCount in 1..statusCount
+            currentCount in 1..stepCount
 
 
     override fun getSuggestedMinimumWidth(): Int {
 
 
         lineLengthComputed = lineLength
-        var extraWidth =  if(obeyLineLength){// extra width required by status at extreme positions
+        var extraWidth =  if(strictObeyLineLength){// extra width required by status at extreme positions
             setWidthDataForObeyingLineLength()
         }else{
             setWidthDataForObeyingStatusText()
@@ -612,12 +612,12 @@ class StatusView @JvmOverloads constructor(
         }
 
 
-        if(statusCount==1) {
+        if(stepCount==1) {
             extraWidth *= 2
         }
 
-        return ((statusCount * (2 * (circleRadius + (circleStrokeWidth/2)))) +
-        ((statusCount - 1) * ( lineLengthComputed + (lineGap * 2))) + extraWidth).toInt()
+        return ((stepCount * (2 * (circleRadius + (circleStrokeWidth/2)))) +
+        ((stepCount - 1) * ( lineLengthComputed + (lineGap * 2))) + extraWidth).toInt()
     }
 
 
@@ -630,7 +630,7 @@ class StatusView @JvmOverloads constructor(
             labelHeight = Math.max(labelHeight,setLabelsHeight(mTextPaintStatus,item))
         }
         if(statusData.size>0){
-            labelHeight+=labelTopMargin
+            labelHeight+=statusTopMargin
         }
 
         val circleRadius =  if(isShowingCurrentStatus()) currentStatusRadius  else circleRadius
@@ -716,7 +716,7 @@ class StatusView @JvmOverloads constructor(
         lastPoint.x = paddingLeft.toFloat() + (circleStrokeWidth / 2)
         lastPoint.y = paddingTop.toFloat() + (circleRadius + (circleStrokeWidth / 2))
         if(isShowingCurrentStatus()) lastPoint.y += currentStatusRadius-circleRadius
-        for (pos in 0 until statusCount) {
+        for (pos in 0 until stepCount) {
 
             var circleStrokePaint: Paint?
             var circleFillPaint : Paint?
@@ -732,7 +732,7 @@ class StatusView @JvmOverloads constructor(
                 textPaintLabel = mTextPaintLabelCurrent
                 linePaint = mLinePaintCurrent
                 itemDrawable = currentDrawable
-            }else if (isShowingIncompleteStatus() && pos in (currentCount)..statusCount) {
+            }else if (isShowingIncompleteStatus() && pos in (currentCount)..stepCount) {
                 circleStrokePaint = mCircleStrokePaintIncomplete
                 circleFillPaint = mCircleFillPaintIncomplete
                 textPaintLabel = mTextPaintLabelsIncomplete
@@ -770,7 +770,7 @@ class StatusView @JvmOverloads constructor(
 
             if(pos<statusData.size){
                 val radii = if(isShowingCurrentStatus() && alignStatusWithCurrent) currentStatusRadius else circleRadius
-                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + labelTopMargin, statusData[pos].staticLayout)
+                labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + statusTopMargin, statusData[pos].staticLayout)
             }
 
 
@@ -815,7 +815,7 @@ class StatusView @JvmOverloads constructor(
 
             val item = statusData[pos]
             when (pos) {
-                0, statusCountIndex() -> {
+                0, stepCountIndex() -> {
 
                     val minStatusWidthExtremes = minStatusWidthExtremes(pos)
                     val minStatusWidth = minStatusWidth(pos)
@@ -871,7 +871,7 @@ class StatusView @JvmOverloads constructor(
         for (pos in 0 until statusData.size) {
             val item = statusData[pos]
             when (pos) {
-                0, statusCountIndex() -> {
+                0, stepCountIndex() -> {
 
                     item.width = if (pos == 0) {
                         widestLineData.extremeLeftStatusWidth
@@ -889,8 +889,8 @@ class StatusView @JvmOverloads constructor(
                 else -> item.width = widestLineData.widestStatus.width
             }
 
-            if(minMarginStatusText> 0 && !addMinStatusMargin &&  pos in 1 until  statusData.size){
-                if(minStatusWidth(pos)+ minStatusWidth(pos-1) - (item.width+statusData[pos-1].width)<minMarginStatusText){
+            if(minStatusAdjacentMargin> 0 && !addMinStatusMargin &&  pos in 1 until  statusData.size){
+                if(minStatusWidth(pos)+ minStatusWidth(pos-1) - (item.width+statusData[pos-1].width)<minStatusAdjacentMargin){
                     addMinStatusMargin = true
                 }
 
@@ -898,7 +898,7 @@ class StatusView @JvmOverloads constructor(
         }
         if(addMinStatusMargin){
             //add additional padding only if it is required
-            lineLengthComputed+= minMarginStatusText
+            lineLengthComputed+= minStatusAdjacentMargin
         }
         return extraWidth
     }
@@ -1015,7 +1015,7 @@ class StatusView @JvmOverloads constructor(
 
             when (pos) {
                 0 -> statusWidthInfo.extremeLeftStatusWidth= result
-                statusCountIndex() -> statusWidthInfo.extremeRightStatusWidth = result
+                stepCountIndex() -> statusWidthInfo.extremeRightStatusWidth = result
             }
 
         }
@@ -1063,9 +1063,9 @@ class StatusView @JvmOverloads constructor(
     private fun currentCountIndex() = currentCount-1
 
     /**
-     * actual position in  list for statusCount
+     * actual position in  list for stepCount
      */
-    private fun statusCountIndex() = statusCount-1
+    private fun stepCountIndex() = stepCount-1
 
 
     /**
@@ -1111,7 +1111,7 @@ class StatusView @JvmOverloads constructor(
         return TypedValue.applyDimension(unit,this,resources.displayMetrics)
     }
 
-    fun getScrollPosForStatus(count: Int): Int {
+    fun getScrollPosForStep(count: Int): Int {
         val posIndex = count - 1
         return if (posIndex> 0 && posIndex < drawingData.size) {
             drawingData[posIndex].circleItem.center.x.toInt()

@@ -1,11 +1,12 @@
 <resources>
-    <string name="app_name">StatusView</string>
+    <string name="app_name">Step View</string>
 
 
-    <string-array name="statuses">
+    <string-array name="status">
         <item>Confirmed</item>
         <item>Dispatched</item>
-        <item>Arriving</item>
+        <item>Arrived</item>
         <item>Delivered</item>
+        <item>Reviewed</item>
     </string-array>
 </resources>
