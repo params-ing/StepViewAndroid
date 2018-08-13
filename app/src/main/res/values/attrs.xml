@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <declare-styleable name="StatusViewScroller">
+        <attr name="circleRadius" format="dimension" />
+        <attr name="stepCount" format="integer" />
+        <attr name="currentCount" format="integer" />
+        <attr name="lineLength" format="dimension" />
+        <attr name="circleColor" format="color"/>
+        <attr name="circleStrokeColor" format="color"/>
+        <attr name="lineColor" format="color"/>
+        <attr name="textColorStatus" format="color"/>
+        <attr name="textSizeStatus" format="dimension"/>
+        <attr name="circleStrokeWidth" format="dimension"/>
+        <attr name="lineWidth" format="dimension"/>
+        <attr name="textColorLabels" format="color"/>
+        <attr name="textSizeLabels" format="dimension"/>
+        <attr name="circleColorType">
+        <flag name="none" value="0" />
+        <flag name="fill" value="1" />
+        <flag name="stroke" value="2" />
+        <flag name="fillStroke" value="3" />
+        </attr>
+        <attr name="circleColorIncomplete" format="color"/>
+        <attr name="circleColorCurrent" format="color"/>
+        <attr name="circleStrokeColorIncomplete" format="color"/>
+        <attr name="circleStrokeColorCurrent" format="color"/>
+        <attr name="lineColorIncomplete" format="color"/>
+        <attr name="lineColorCurrent" format="color"/>
+        <attr name="textColorLabelsIncomplete" format="color"/>
+        <attr name="textColorLabelsCurrent" format="color"/>
+        <attr name="completeDrawable" format="reference"/>
+        <attr name="currentDrawable" format="reference"/>
+        <attr name="incompleteDrawable" format="reference"/>
+        <attr name="drawLabels" format="boolean"/>
+        <attr name="strictObeyLineLength" format="boolean"/>
+        <attr name="lineGap" format="dimension"/>
+        <attr name="minStatusAdjacentMargin" format="dimension"/>
+        <attr name="statusTopMargin" format="dimension"/>
+        <attr name="currentStepZoom" format="float"/>
+        <attr name="alignStatusWithCurrent" format="boolean"/>
+        <attr name="statusFont" format="reference"/>
+        <attr name="labelFont" format="reference"/>
+        <attr name="android:entries" />
+    </declare-styleable>
+
+
+</resources>

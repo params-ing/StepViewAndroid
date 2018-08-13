@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="ResAuto">
+
+
+
+
+        <params.com.statusView.StatusViewScroller
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:stepCount="5"
+            app:currentCount="4"
+            app:drawLabels="true"
+            android:entries="@array/status"
+            app:circleColorType="fillStroke"
+            app:lineGap="5dp"
+            app:lineWidth="3dp"
+            app:lineColor="@android:color/black"
+            app:lineColorIncomplete="#B4B7BA"
+            app:lineColorCurrent="#91A8D0"
+            app:circleColor="#CC004B8D"
+            app:circleColorCurrent="#004B8D"
+            app:circleColorIncomplete="#BCBCBE"
+            app:textColorLabels="@android:color/white"
+            app:textColorLabelsCurrent="@android:color/white"
+            app:textColorLabelsIncomplete="@android:color/black"
+            app:circleStrokeWidth="4dp"
+            app:circleStrokeColorCurrent="#91A8D0"
+            app:textSizeLabels="15sp"
+            app:completeDrawable="@drawable/ic_done_black_24dp"/>
+
+
+
+
+
+
+
+</android.support.constraint.ConstraintLayout>
