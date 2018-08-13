@@ -1,5 +1,5 @@
 # StepViewAndroid
-An android library written in kotlin to display steps (without any max-min limits) along with the descriptions. It also supports some really cool features.
+An android library written in kotlin to display steps (without any max-min limits) along with the status/description. It also supports some really cool features.
 
 ## Usage
 
@@ -17,10 +17,10 @@ An android library written in kotlin to display steps (without any max-min limit
 <params.com.statusView.StatusViewScroller
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    app:statusCount="5"
+    app:stepCount="5"
     app:currentCount="4"
     app:drawCount="true"
-    android:entries="@array/statuses"
+    android:entries="@array/status"
     app:circleColorType="fillStroke"
     app:lineGap="5dp"
     app:lineWidth="3dp"
@@ -47,31 +47,31 @@ An android library written in kotlin to display steps (without any max-min limit
 * Set different drawables for completed, current & incomplete states.
 
 ```XML
-    app:currentStatusZoom="0.5"
+    app:currentStepZoom="0.5"
     app:complete_drawable="@drawable/ic_satisfied_black_24dp"
     app:current_drawable="@drawable/ic_dissatisfied_black_24dp"
     app:incomplete_drawable="@drawable/ic_very_dissatisfied_black_24dp"
 ```
 
-### Step description customisations
+### Step Status customisations
 
 ![Downloading..](https://github.com/params-ing/StepViewAndroid/blob/dev/screenshots/android_stepview.png)
 
 * Multiline Text Support: View automatically adjusts line length to make sure words or alphabets from one line do not crossover to next line.
   However, If you want to strictly obey line length set ```app:strictObeyLineLength= "true"```.
-* To add font to description simply refer to the font file from res/font directory.
-* Ensure a minimum margin between description texts in case they are too close.
-* Set top margin of a status description from its corresponding circle.
-* Align all descriptions at the same level in case, a zoom level is set to current status.
-* Set text color to status descriptions.
+* To add font to status simply refer to the font file from res/font directory.
+* Ensure a minimum margin between status texts in case they are too close.
+* Set top margin of a status text from its corresponding circle.
+* Align all status at the same level in case, a zoom level is set to current step.
+* Set text color to status.
 
 ```XML
-    app:currentStatusZoom="0.3"
-    app:statusTextFont="@font/lekton_r"
-    app:statusTextTopMargin="15dp"
-    app:minStatusTextAdjacentMargin="5dp"
-    app:alignStatusTextWithCurrent="true"
-    app:textColorStatusText="#000000"
+    app:currentStepZoom="0.3"
+    app:statusFont="@font/lekton_r"
+    app:statusTopMargin="15dp"
+    app:minStatusAdjacentMargin="5dp"
+    app:alignStatusWithCurrent="true"
+    app:textColorStatus="#000000"
 ```
 
 ### Scrolling property
