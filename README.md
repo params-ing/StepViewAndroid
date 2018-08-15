@@ -1,6 +1,12 @@
 # StepViewAndroid
 An Android library written in kotlin to display steps (without any max-min limits) along with the status/description. It also supports some really cool features.
 
+## Setup
+
+```
+implementation 'com.params.stepview:stepview:1.0.0'
+```
+
 ## Usage
 
 ### A customised StepView
