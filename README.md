@@ -18,7 +18,7 @@ An Android library written in kotlin to display steps (without any max-min limit
 * Stroke color (circle), fill color (circle), line color & label text color can be set differently for completed, current & incomplete states.
 
 ```XML
-<params.com.statusView.StatusViewScroller
+<params.com.stepview.StatusViewScroller
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:stepCount="5"

@@ -1,4 +1,4 @@
-package params.com.statusView
+package params.com.stepview
 
 import android.content.Context
 import android.graphics.*
@@ -764,9 +764,9 @@ class StatusView @JvmOverloads constructor(
             }
 
 
-            var lineItem: StatusView.LineItem? = null
-            var statusItemText: StatusView.LabelItemText? = null
-            var labelItemText: StatusView.StatusItemText? = null
+            var lineItem: LineItem? = null
+            var statusItemText: LabelItemText? = null
+            var labelItemText: StatusItemText? = null
 
 
             if (pos == 0) {
