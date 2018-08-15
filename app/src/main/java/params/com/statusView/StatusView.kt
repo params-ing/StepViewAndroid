@@ -596,6 +596,11 @@ class StatusView @JvmOverloads constructor(
     override fun getSuggestedMinimumWidth(): Int {
 
 
+        if (stepCount <= 0) {
+            return 0
+        }
+
+
         lineLengthComputed = lineLength
         var extraWidth = if (strictObeyLineLength) {// extra width required by status at extreme positions
             setWidthDataForObeyingLineLength()
@@ -603,14 +608,14 @@ class StatusView @JvmOverloads constructor(
             setWidthDataForObeyingStatusText()
         }
 
+        if (stepCount == 1) {
+            extraWidth *= 2
+        }
+
         if (isShowingCurrentStatus()) {
             extraWidth += (currentStatusRadius - circleRadius) * 2
         }
 
-
-        if (stepCount == 1) {
-            extraWidth *= 2
-        }
 
         return ((stepCount * (2 * (circleRadius + (circleStrokeWidth / 2)))) +
                 ((stepCount - 1) * (lineLengthComputed + (lineGap * 2))) + extraWidth).toInt()
@@ -618,17 +623,39 @@ class StatusView @JvmOverloads constructor(
 
 
     override fun getSuggestedMinimumHeight(): Int {
+        if (stepCount <= 0) {
+            return 0
+        }
 
-        var labelHeight = 0.0f
+        var maxLabelHeight = 0.0f
+
         for (item in statusData) {
-            labelHeight = Math.max(labelHeight, setLabelsHeight(mTextPaintStatus, item))
-        }
-        if (statusData.size > 0) {
-            labelHeight += statusTopMargin
+            maxLabelHeight = Math.max(maxLabelHeight, setLabelsHeight(mTextPaintStatus, item))
         }
 
-        val circleRadius = if (isShowingCurrentStatus()) currentStatusRadius else circleRadius
-        return (((circleRadius * 2) + circleStrokeWidth) + labelHeight).toInt()
+        val circleAndStatusTextHeight = if (isShowingCurrentStatus()) {
+            val topRadius = currentStatusRadius
+            val labelHeightCurrentStatus = if (statusData.size > 0 && currentCountIndex() in 0..statusData.size) {
+                statusData[currentCountIndex()].height
+            } else {
+                0.0f
+            }
+
+            val bottomRadiusAndText = Math.max(currentStatusRadius + labelHeightCurrentStatus, circleRadius + maxLabelHeight)
+
+            topRadius + bottomRadiusAndText
+
+        } else {
+            circleRadius * 2 + maxLabelHeight
+        }
+
+        val statusTopMargin = if (statusData.size > 0) {
+            statusTopMargin
+        } else {
+            0.0f
+        }
+
+        return (circleAndStatusTextHeight + circleStrokeWidth + statusTopMargin).toInt()
     }
 
 
@@ -636,12 +663,6 @@ class StatusView @JvmOverloads constructor(
         val desiredWidth = paddingLeft + paddingRight + suggestedMinimumWidth
         val desiredHeight = paddingTop + paddingBottom + suggestedMinimumHeight
 
-        /* val measureSpecWidth = MeasureSpec.getMode(widthMeasureSpec)
-           val measureSpecHeight = MeasureSpec.getMode(heightMeasureSpec)
-         *//*if(measureSpecHeight!=MeasureSpec.AT_MOST || measureSpecWidth!=MeasureSpec.AT_MOST){
-            throw IllegalStateException("Width and height should be wrap_content")
-        }*//*
-*/
         val measuredWidth = resolveSize(desiredWidth, widthMeasureSpec)
         val measuredHeight = resolveSize(desiredHeight, heightMeasureSpec)
 
@@ -841,6 +862,7 @@ class StatusView @JvmOverloads constructor(
      */
     private fun setWidthDataForObeyingStatusText(): Float {
         var extraWidth = 0.0f
+        if (statusData.size == 0) return extraWidth
 
         val widestLineData: StatusTextWidthInfo = getStatusTextWidthInfo(statusData.map { it.text }, mTextPaintStatus)
 
