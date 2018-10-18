@@ -1,6 +1,10 @@
 # StepViewAndroid
 An Android library written in kotlin to display steps (without any max-min limits) along with the status/description. It also supports some really cool features.
 
+## Custom Views Tutorial
+For any information on how to create custom views you can refer to the link below.<br />
+https://medium.com/mindorks/how-to-create-custom-views-141dc0570e57
+
 ## Setup
 
 ```
