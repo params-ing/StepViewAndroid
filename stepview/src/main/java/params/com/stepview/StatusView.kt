@@ -105,7 +105,9 @@ class StatusView @JvmOverloads constructor(
     /*
     The count up to  which status has been completed
     */
-    var currentCount: Int by OnLayoutProp(INVALID_STATUS_COUNT)
+    var currentCount: Int by OnLayoutProp(INVALID_STATUS_COUNT){
+        initCirclePaints()
+    }
 
 
     /*
