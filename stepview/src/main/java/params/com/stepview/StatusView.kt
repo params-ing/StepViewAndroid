@@ -409,6 +409,7 @@ class StatusView @JvmOverloads constructor(
     //Stores information about every status text and its dimension properties
     private class StatusInfo(val text: String, var width: Float = 0.0f, var height: Float = 0.0f, var staticLayout: StaticLayout? = null)
 
+    private var propsIntialisedOnce = false
 
     init {
 
@@ -527,7 +528,7 @@ class StatusView @JvmOverloads constructor(
             mTextPaintLabelCurrent.typeface = this
         }
 
-
+        propsIntialisedOnce = true
     }
 
     private fun initCirclePaints() {
@@ -1092,7 +1093,7 @@ class StatusView @JvmOverloads constructor(
     inner class OnLayoutProp<T>(private var field: T, private inline var func: () -> Unit = {}) {
         operator fun setValue(thisRef: Any?, p: KProperty<*>, v: T) {
             field = v
-            if (ViewCompat.isLaidOut(this@StatusView)) {
+            if (propsIntialisedOnce) {
                 drawingData.clear()
                 func()
                 requestLayout()
@@ -1113,7 +1114,7 @@ class StatusView @JvmOverloads constructor(
     inner class OnValidateProp<T>(private var field: T, private inline var func: () -> Unit = {}) {
         operator fun setValue(thisRef: Any?, p: KProperty<*>, v: T) {
             field = v
-            if (ViewCompat.isLaidOut(this@StatusView)) {
+            if (propsIntialisedOnce) {
                 func()
                 invalidate()
 

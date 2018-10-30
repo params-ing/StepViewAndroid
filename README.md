@@ -94,3 +94,13 @@ implementation 'com.params.stepview:stepview:1.0.0'
 
 * The view can be scrolled if the content exceeds the available width.
 * You can also scroll to a particular step by calling ```statusViewScroller.scrollToStep(stepCount)```
+
+### Changing properties at runtime
+
+* You can also easily change any property at runtime as described below.
+```
+     statusViewScroller.statusView.run {
+        currentCount = 2
+        circleFillColorCurrent = Color.RED
+     }
+```

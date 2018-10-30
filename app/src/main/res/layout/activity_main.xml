@@ -9,6 +9,7 @@
 
 
         <params.com.stepview.StatusViewScroller
+            android:id="@+id/statusViewScroller"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toTopOf="parent"
