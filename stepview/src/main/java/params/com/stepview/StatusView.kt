@@ -372,7 +372,11 @@ class StatusView @JvmOverloads constructor(
      */
     fun setStatusList(list: List<String>) {
         //to make sure original list is not modified convert to mutableList
-        val input = list.toMutableList().dropLast(stepCount)
+        val input = list.toMutableList()
+        if (stepCount > 0 && list.size - stepCount > 0) {
+            input.dropLast(list.size - stepCount)
+        }
+
 
         statusData = (input.map { StatusInfo(it) }).toMutableList()
 
@@ -638,7 +642,7 @@ class StatusView @JvmOverloads constructor(
 
         val circleAndStatusTextHeight = if (isShowingCurrentStatus()) {
             val topRadius = currentStatusRadius
-            val labelHeightCurrentStatus = if (statusData.size > 0 && currentCountIndex() in 0..statusData.size) {
+            val labelHeightCurrentStatus = if (statusData.size > 0 && currentCountIndex() in 0..(statusData.size-1)) {
                 statusData[currentCountIndex()].height
             } else {
                 0.0f
