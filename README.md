@@ -8,7 +8,7 @@ https://medium.com/mindorks/how-to-create-custom-views-141dc0570e57
 ## Setup
 
 ```
-implementation 'com.params.stepview:stepview:1.0.1'
+implementation 'com.params.stepview:stepview:1.0.2'
 ```
 
 ## Usage
