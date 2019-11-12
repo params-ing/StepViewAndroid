@@ -296,6 +296,14 @@ class StatusView @JvmOverloads constructor(
      *  A boolean which decides if to draw labels or not
      */
 
+    var drawCount: Boolean by OnValidateProp(false){
+        setDrawingDimensions()
+    }
+
+    /**
+     *  A boolean which decides if labels should be written inside
+     */
+
     var drawLabels: Boolean by OnValidateProp(false){
         setDrawingDimensions()
     }
@@ -429,6 +437,7 @@ class StatusView @JvmOverloads constructor(
             incompleteDrawable = a.getDrawable(R.styleable.StatusViewScroller_incompleteDrawable)
             currentDrawable = a.getDrawable(R.styleable.StatusViewScroller_currentDrawable)
             drawLabels = a.getBoolean(R.styleable.StatusViewScroller_drawLabels, drawLabels)
+            drawCount = a.getBoolean(R.styleable.StatusViewScroller_drawCount, drawCount)
             strictObeyLineLength = a.getBoolean(R.styleable.StatusViewScroller_strictObeyLineLength, strictObeyLineLength)
             lineGap = a.getDimension(R.styleable.StatusViewScroller_lineGap, lineGap)
             minStatusAdjacentMargin = a.getDimension(R.styleable.StatusViewScroller_minStatusAdjacentMargin, minStatusAdjacentMargin)
@@ -768,31 +777,39 @@ class StatusView @JvmOverloads constructor(
             val circleItem = CircleItem(PointF((lastPoint.x + circleRadius), lastPoint.y), circleRadius, circleStrokePaint, circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f) + (circleStrokeWidth / 2)
 
-            if(pos<statusData.size){
+            if(!drawLabels && pos < statusData.size){
                 val radii = if(isShowingCurrentStatus() && alignStatusWithCurrent) currentStatusRadius else circleRadius
                 labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + statusTopMargin, statusData[pos].staticLayout)
             }
 
 
 
-            if (itemDrawable != null) {
-                val width = itemDrawable.intrinsicWidth
-                val height = itemDrawable.intrinsicHeight
-                val xPos = circleItem.center.x.toInt()
-                val yPos = circleItem.center.y.toInt()
-                val drawableRect = Rect(xPos - width / 2, yPos - height / 2, xPos + width / 2, yPos + height / 2)
-                statusItemText = LabelItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
+            when {
+                itemDrawable != null -> {
+                    val width = itemDrawable.intrinsicWidth
+                    val height = itemDrawable.intrinsicHeight
+                    val xPos = circleItem.center.x.toInt()
+                    val yPos = circleItem.center.y.toInt()
+                    val drawableRect = Rect(xPos - width / 2, yPos - height / 2, xPos + width / 2, yPos + height / 2)
+                    statusItemText = LabelItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
+                }
 
-            } else if (drawLabels) {
-                val text: String = (pos + 1).toString()
-                val measuringRect = Rect()
-                textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
-                statusItemText = LabelItemText(text, textPaintLabel, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
+                drawLabels -> {
+                    val text: String = statusData[pos].text
+                    val measuringRect = Rect()
+                    textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
+                    statusItemText = LabelItemText(text, textPaintLabel, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
+                }
 
+                drawCount -> {
+                    val text: String = (pos + 1).toString()
+                    val measuringRect = Rect()
+                    textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
+                    statusItemText = LabelItemText(text, textPaintLabel, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
+                }
             }
 
-            drawingData.add(Item(statusItemText, circleItem, lineItem,labelItemText))
-
+            drawingData.add(Item(statusItemText, circleItem, lineItem, labelItemText))
         }
 
 
