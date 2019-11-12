@@ -296,7 +296,7 @@ class StatusView @JvmOverloads constructor(
      *  A boolean which decides if to draw labels or not
      */
 
-    var drawLabelsBelow: Boolean by OnValidateProp(false){
+    var drawCount: Boolean by OnValidateProp(false){
         setDrawingDimensions()
     }
 
@@ -304,7 +304,7 @@ class StatusView @JvmOverloads constructor(
      *  A boolean which decides if labels should be written inside
      */
 
-    var drawLabelsInside: Boolean by OnValidateProp(false){
+    var drawLabels: Boolean by OnValidateProp(false){
         setDrawingDimensions()
     }
 
@@ -436,8 +436,8 @@ class StatusView @JvmOverloads constructor(
             completeDrawable = a.getDrawable(R.styleable.StatusViewScroller_completeDrawable)
             incompleteDrawable = a.getDrawable(R.styleable.StatusViewScroller_incompleteDrawable)
             currentDrawable = a.getDrawable(R.styleable.StatusViewScroller_currentDrawable)
-            drawLabelsInside = a.getBoolean(R.styleable.StatusViewScroller_drawLabelsInside, drawLabelsInside)
-            drawLabelsBelow = a.getBoolean(R.styleable.StatusViewScroller_drawLabelsBelow, drawLabelsBelow)
+            drawLabels = a.getBoolean(R.styleable.StatusViewScroller_drawLabels, drawLabels)
+            drawCount = a.getBoolean(R.styleable.StatusViewScroller_drawCount, drawCount)
             strictObeyLineLength = a.getBoolean(R.styleable.StatusViewScroller_strictObeyLineLength, strictObeyLineLength)
             lineGap = a.getDimension(R.styleable.StatusViewScroller_lineGap, lineGap)
             minStatusAdjacentMargin = a.getDimension(R.styleable.StatusViewScroller_minStatusAdjacentMargin, minStatusAdjacentMargin)
@@ -777,7 +777,7 @@ class StatusView @JvmOverloads constructor(
             val circleItem = CircleItem(PointF((lastPoint.x + circleRadius), lastPoint.y), circleRadius, circleStrokePaint, circleFillPaint)
             lastPoint.x += ((circleRadius) * 2.0f) + (circleStrokeWidth / 2)
 
-            if(!drawLabelsInside && pos<statusData.size){
+            if(!drawLabels && pos < statusData.size){
                 val radii = if(isShowingCurrentStatus() && alignStatusWithCurrent) currentStatusRadius else circleRadius
                 labelItemText = StatusItemText(circleItem.center.x, circleItem.center.y + radii + circleStrokeWidth/2 + statusTopMargin, statusData[pos].staticLayout)
             }
@@ -794,14 +794,14 @@ class StatusView @JvmOverloads constructor(
                     statusItemText = LabelItemText(drawableItem = DrawableItem(drawableRect, itemDrawable))
                 }
 
-                drawLabelsInside -> {
+                drawLabels -> {
                     val text: String = statusData[pos].text
                     val measuringRect = Rect()
                     textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
                     statusItemText = LabelItemText(text, textPaintLabel, circleItem.center.x, circleItem.center.y - measuringRect.exactCenterY())
                 }
 
-                drawLabelsBelow -> {
+                drawCount -> {
                     val text: String = (pos + 1).toString()
                     val measuringRect = Rect()
                     textPaintLabel.getTextBounds(text, 0, text.length, measuringRect)
